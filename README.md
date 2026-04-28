@@ -67,15 +67,15 @@ Targeted leverage-point set (count to be reconciled with the user, currently 14 
 
 | LP | Status | LP | Status |
 |---|---|---|---|
-| testing | shipped (v0.1) | continuous-deployment | planned |
+| testing | shipped (v0.1) | continuous-deployment | shipped (v0.1) |
 | documentation | shipped (v0.1) | types | planned |
 | logging | shipped (v0.1) | developer-experience | planned |
 | architecture | shipped (v0.1) | versioning | planned |
 | configuration | shipped (v0.1) | purpose-and-scope | planned |
 | dependencies | shipped (v0.1) | dry | planned (lens promoted) |
 | security | shipped (v0.1) | principles-and-patterns | planned (lens promoted) |
-| environments | planned | software-complexity | planned (lens promoted) |
-| continuous-integration | planned | (TBD 18th) | open |
+| environments | shipped (v0.1) | software-complexity | planned (lens promoted) |
+| continuous-integration | shipped (v0.1) | (TBD 18th) | open |
 
 ## Authoring style
 
