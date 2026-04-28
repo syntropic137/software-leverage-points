@@ -132,7 +132,7 @@ fi
 # -----------------------------------------------------------------------------
 # Check 4: Em-dash sweep.
 # -----------------------------------------------------------------------------
-EM_HITS=$(grep -rn $'\xe2\x80\x94\|\xe2\x80\x93' skills docs README.md MIGRATION.md RELEASE-NOTES.md 2>/dev/null || true)
+EM_HITS=$(grep -rn $'\xe2\x80\x94\|\xe2\x80\x93' skills docs .claude README.md MIGRATION.md RELEASE-NOTES.md 2>/dev/null || true)
 if [[ -z "$EM_HITS" ]]; then
   note_ok "no em-dashes or en-dashes in tracked content"
 else
