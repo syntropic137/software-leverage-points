@@ -19,13 +19,14 @@ Initial public release. Ships 18 leverage-point skills, 3 operator skills, 3 len
 
 ### Validation
 
-Four evals shipped in `docs/evals/`:
+Five evals shipped in `docs/evals/`:
 - eval-001 (self-audit, testing + documentation): 10/12
 - eval-002 (design spec, testing + documentation): 11/12
 - eval-003 (full 18-LP fan-out against README): 12/12
 - eval-004 (skill-auditor self-audit, cross-doc + link integrity): caught the schema-path drift this release fixes, plus 5 other drift findings.
+- eval-005 (full 18-LP fan-out against an external Bun + TypeScript skill with substantive code): 11/12; NO-OP rate dropped from 9/18 (README target) to 2/18 (code target) as predicted; 7 of 9 previously-NO-OP LPs fired substantively.
 
-Score arc demonstrates that the citation discipline + lens coverage compounded.
+Score arc demonstrates that the citation discipline + lens coverage compounded; eval-005 validates the LPs hold up against actual code, not just prose.
 
 ### Credit
 
@@ -41,5 +42,5 @@ Multi-vendor scaffolding patterns and structural conventions adapted from [obra/
 
 - Marketplace listing: in progress (`.claude-plugin/marketplace.json` authored, not yet published).
 - `skill-builder` greenfield mode.
-- A real eval against an external project's PR diff (eval-005).
+- A real eval against an external project's PR diff (eval-006). (eval-005 shipped: external whole-skill target with substantive code; PR-diff target moved to eval-006.)
 - Scripted version of the auditor's checks (`scripts/audit.sh`) for CI integration: in progress (script authored; runs the cross-doc, version, link, and em-dash checks deterministically).
