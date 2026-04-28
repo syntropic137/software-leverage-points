@@ -7,10 +7,10 @@ description: Use when authoring or refining any skill in the software-leverage-p
 
 ## Overview
 
-This skill is the project's authoring contract. Read it before adding or refining any skill in this plugin. It encodes:
+This skill is the canonical authoring contract for this repo. Read it before adding or refining any skill. It encodes:
 
-- The three-layer model (L1 plugin generic, L2 repo-specific, L3 active reviews) the plugin's mental model rests on.
-- The structural difference between **principle skills** (the 18 SLPs and 3 lens references; modeled on `superpowers:verification-before-completion`) and **procedural skills** (the 3 operator skills: `software-leverage-review`, `skill-builder`, `skill-auditor`).
+- The three-layer model (L1 plugin generic, L2 repo-specific, L3 active reviews) the plugin rests on.
+- The structural difference between **principle skills** (the 18 SLPs and 3 lens references) and **procedural skills** (the 3 operator skills: `software-leverage-review`, `skill-builder`, `skill-auditor`).
 - The L2 skill template `skill-builder` emits, including `## Maturity Assessment` and `## Growth Direction`.
 - The house rules: em-dash hygiene, citation discipline, audit-script gates, dated technology recommendations.
 
@@ -18,12 +18,12 @@ This skill is the project's authoring contract. Read it before adding or refinin
 
 ## When to Use
 
-- Authoring a new SLP (e.g., adding a 19th leverage point).
-- Refining an existing SLP during a Phase 2 feedback batch.
+- Authoring a new software leverage point (e.g., adding a 19th).
+- Refining an existing SLP based on user feedback or evals.
 - Authoring or refining one of the 3 operator skills.
 - Authoring or refining a lens reference doc.
 - Updating the L2 template that `skill-builder` emits.
-- Reviewing an SLP authored by an agent, to check it conforms.
+- Reviewing an agent-authored skill to check it conforms.
 
 ## The Three-Layer Model
 
@@ -37,7 +37,7 @@ The principle/procedural split tracks Layer 1's two skill types. SLP and lens sk
 
 ## SLP Skill Structure (principle-doc shape)
 
-For each of the 18 software leverage points and the 3 lens references, the SKILL.md is a **principle doc**, modeled on `superpowers:verification-before-completion`. It is consulted by an operator skill, not invoked as a function.
+For each of the 18 software leverage points and the 3 lens references, the SKILL.md is a **principle doc**: a body of named principles, anti-patterns, and growth examples that an operator skill consults during a review. It is **not** invoked as a function and does not have a workflow of its own.
 
 ```
 ---
@@ -138,28 +138,6 @@ Mistakes to catch in SLP authoring:
 | "L2 doesn't need Maturity Assessment for a small repo" | Small repos grow; the L2 captures the journey, not just the snapshot |
 | "I'll skip audit.sh just this once" | The drift findings the eval suite catches are exactly the failures we are preventing |
 
-## Phase 2 Process
-
-Phase 2 refines all 18 SLPs through 6 batches of 3:
-
-| Batch | SLPs |
-|---|---|
-| 1 | testing, logging, architecture |
-| 2 | documentation, dependencies, security |
-| 3 | configuration, environments, types |
-| 4 | continuous-integration, continuous-deployment, error-handling |
-| 5 | developer-experience, versioning, purpose-and-scope |
-| 6 | dry, principles-and-patterns, software-complexity |
-
-Per batch:
-1. Orchestrator asks 6 questions per SLP (stack, discipline, defaults, anti-patterns, citations, growth examples).
-2. User answers.
-3. Verbatim user input lands in `docs/phase-2/batch-N-feedback.md`.
-4. Orchestrator drafts edits and confirms scope.
-5. Single commit per batch: `feat(skills): apply Phase 2 user-feedback refinements (batch N)`.
-
-Stream B (operator-skill maturity awareness, L2 template, README diagram) was completed in parallel; see `docs/phase-2/stream-b-operator-skills-and-diagram.md`.
-
 ## Why This Matters
 
 Without this skill, every authoring session reinvents conventions. SLPs drift toward inconsistent shapes, citations become decorative, em-dashes leak in, and the principle/procedural split blurs. The plugin then loses the property that made the eval scores climb: each SLP is a coherent lens, distinct from its neighbors, calibrated to the target.
@@ -168,10 +146,7 @@ This skill is the single source of authoring truth. Read it. Apply it. Future ma
 
 ## References
 
-- `superpowers:verification-before-completion` is the exemplar principle-doc shape. Read it.
-- `PHASE-2.md` is the top-level Phase 2 plan.
-- `docs/phase-2/stream-a-slp-refinement.md` is the Stream A interactive plan.
-- `docs/phase-2/stream-b-operator-skills-and-diagram.md` is the Stream B background plan.
-- `MIGRATION.md` tracks all milestones from Phase 0 through release.
-- `scripts/audit.sh` enforces the mechanical subset of these rules.
-- `skills/software-leverage-review/output-schema.json` is the structured-output contract that every SLP's findings conform to (emitted by the operator skills, not the SLPs themselves).
+- `scripts/audit.sh` enforces the mechanical subset of these rules (em-dash hygiene, link integrity, count consistency across docs, manifest version parity).
+- `skills/software-leverage-review/output-schema.json` is the structured-output contract that every finding conforms to (emitted by the operator skills, not the SLPs themselves).
+- `skills/software-leverage-review/SKILL.md` shows the procedural-skill shape in practice.
+- Any existing SLP under `skills/<lp>/SKILL.md` shows the principle-doc shape in practice (`testing`, `logging`, `architecture` are good starting points).
