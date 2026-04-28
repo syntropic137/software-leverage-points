@@ -14,6 +14,33 @@ This plugin treats each high-leverage concern as its own meta-skill, so an auton
 
 The skills compose with [obra/superpowers](https://github.com/obra/superpowers), a sibling plugin that provides the cross-cutting workflow skills (`brainstorming`, `subagent-driven-development`, `writing-plans`, etc.). This plugin focuses purely on the *what to review*; superpowers provides the *how to dispatch and review*.
 
+### L1 to L2 to L3 flow
+
+The plugin separates generic principles (L1) from repo-specific calibration (L2) from active reviews (L3). `skill-builder` is the bridge that reads L1 and inspects the target to produce L2; `software-leverage-review` runs L3 by fanning subagents against L2; `skill-auditor` watches L2 for drift and feeds updates back.
+
+```mermaid
+flowchart TD
+    subgraph L1[L1: Plugin generic skills]
+        M[18 SLPs + 3 operators]
+        R[3 lens reference docs]
+    end
+
+    subgraph L2[L2: Repo-specific skills, generated]
+        L2S[L2 SKILL.md with<br/>Maturity Assessment +<br/>Growth Direction +<br/>Calibrated checks]
+    end
+
+    subgraph L3[L3: Active reviews]
+        SLR[software-leverage-review<br/>fans out N subagents]
+        SUB[Subagent: applies L2 skill,<br/>severity-calibrated to maturity]
+    end
+
+    M -->|skill-builder reads L1,<br/>inspects target repo| L2S
+    L2S -->|invoked by| SLR
+    SLR --> SUB
+    SUB --> Findings
+    Findings -->|skill-auditor detects drift,<br/>updates Maturity Assessment| L2S
+```
+
 ## Credit
 
 Multi-vendor scaffolding patterns adapted from [obra/superpowers](https://github.com/obra/superpowers). We track superpowers as a git `upstream` remote so we can selectively pull scaffolding improvements over time. Skills, agents, and commands are entirely our own.
