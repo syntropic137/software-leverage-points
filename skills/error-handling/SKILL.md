@@ -73,6 +73,8 @@ Error messages are read by users, operators, support staff, and other systems. A
 
 Cross-reference: the `security` lens carries the "do not concatenate user input into error messages" check; this lens carries the "messages are a contract" framing.
 
+Cross-reference: errors are emitted at error boundaries through the project's logger, structured per the `logging` lens, with the cause chain (principle 5) attached as fields rather than flattened into a string. The boundary log line is where the typed taxonomy, the preserved cause, and the actionable message become a queryable event for operators and agent reviewers. See `logging` principle 8 ("log at the seams") for where these emissions belong.
+
 ## Red Flags - STOP
 
 - Generic `Exception` / `Error` / `panic` without a typed taxonomy: callers cannot dispatch on failure mode
@@ -156,6 +158,8 @@ With typed-and-deliberate error handling:
 - Errors flow to a place that decides; nothing is swallowed silently.
 - Users and operators see actionable messages; tickets and pages drop in volume.
 - CI pipelines dispatch on exit code; the dispatch survives upgrades and translations.
+
+**Error handling is also an agent-facing feedback channel.** As LLM-driven test, review, and debugging agents become a regular part of the development loop, typed errors with structured fields and preserved cause chains are how those agents diagnose failures from logs alone, without re-running the system. A `NotFoundError(entity="user", id=...)` with its cause chain intact is a queryable event; a stringified "something went wrong" is opaque prose the agent must guess at. Codebases whose errors are typed, propagated deliberately, and logged structurally at the boundary (see `logging` lens) are codebases where an agent can reconstruct what failed and why from the runtime trace, instead of re-running the failing scenario to learn what the code already knew.
 
 ## Growth examples
 
