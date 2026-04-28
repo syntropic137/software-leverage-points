@@ -70,7 +70,7 @@ Targeted leverage-point set (count to be reconciled with the user, currently 14 
 | testing | shipped (v0.1) | continuous-deployment | planned |
 | documentation | shipped (v0.1) | types | planned |
 | logging | shipped (v0.1) | developer-experience | planned |
-| architecture | planned | versioning | planned |
+| architecture | shipped (v0.1) | versioning | planned |
 | configuration | planned | purpose-and-scope | planned |
 | dependencies | planned | dry | planned (lens promoted) |
 | security | planned | principles-and-patterns | planned (lens promoted) |
