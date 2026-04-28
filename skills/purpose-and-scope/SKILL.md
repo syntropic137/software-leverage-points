@@ -1,89 +1,162 @@
 ---
 name: purpose-and-scope
-description: "Use when reviewing purpose-and-scope concerns: project's stated purpose, in-scope vs out-of-scope boundaries, plan alignment with stated purpose, scope creep, separation of concerns at the project level"
+description: "Use when reviewing purpose-and-scope concerns: stated project purpose, declared in-scope and out-of-scope, non-goals, plan-purpose alignment, scope-creep within a single change, project-level bounded contexts, dependency-purpose linkage"
 ---
 
-# Purpose and Scope Leverage Point
+# Purpose and Scope
 
-## When to Use
+## Overview
 
-- Before any plan or PR is implemented, to confirm alignment with the project's stated purpose
-- Whenever the implementation surface seems to grow past stated scope
-- Whenever a new dependency or module looks tangential to the project's reason for existing
-- The orchestrator (`software-leverage-review`) fans out a subagent for purpose-and-scope as the first lens
+A project's purpose is the anchor that every plan, PR, and dependency hangs from. Done well, the purpose lives in one canonical artifact, names goals and non-goals, and every plan traces back to it. Done poorly, contributors extrapolate purpose from code, scope creeps PR by PR, and the project quietly grows a second identity nobody signed up for.
 
-## When NOT to Use
+**Core principle:** Purpose is stated in one canonical place, non-goals are stated alongside goals, and every plan or PR traces back to the stated purpose. Scope changes get the same explicit decision capture as architecture changes.
 
-- For low-level architectural separation (module boundaries, layering, dependency direction): that is the `architecture` LP. This LP cares about scope at the project and plan level, not at the module level.
-- For principle-level cross-cutting concerns (DRY, complexity, naming): use the `principles-and-patterns` lens.
+## Core Principles
 
-## Input
+### 1. The project has a stated purpose document (scope: projects with multiple contributors or external users)
 
-`target`: a file path, directory, plan document, or git diff to review.
+This principle scopes to any project beyond a single-author throwaway: as soon as a second contributor or an external user appears, conceptual integrity needs an anchor. Solo prototypes inherit a weaker form (a one-line README is enough until someone else shows up).
 
-## Workflow
+When the scope applies: a written purpose statement names the problem, the users, and the non-goals. Without it, every contributor extrapolates from the code, and extrapolations diverge.
 
-1. Read the `target`.
-2. Detect purpose-and-scope artifacts: `README.md` purpose section, `PURPOSE.md`, `ARCHITECTURE.md`, `ADR-0001` (project-charter ADR), explicit non-goals list, milestone/roadmap docs, plan documents.
-3. Apply checks:
-   - Does the repo have a clear, written statement of purpose and non-goals (README, `PURPOSE.md`, `ADR-0001`)?
-   - Does the plan or PR align with that stated purpose?
-   - Are out-of-scope additions surfaced explicitly, and either deferred, rejected, or accompanied by an explicit scope expansion?
-   - Is the plan's scope decomposable to one axis of change?
-   - Are new dependencies or modules justified by the stated purpose?
-4. Emit findings using the schema at `../software-leverage-review/output-schema.json` (authoritative) / `output-schema.md` (human-readable). The `software_leverage_point` field MUST be `"purpose-and-scope"`.
+**Multiple valid locations exist for the purpose document:** README purpose section at the top, dedicated `PURPOSE.md`, project-charter `ADR-0001`, plugin manifest with a purpose field, repo description plus a linked doc. The principle is: pick one canonical home and link to it from the others. The red flag is "purpose lives in three places saying three different things," not "did not pick a particular file name."
 
-## Output
+### 2. Non-goals are stated alongside goals
 
-Conforms to `../software-leverage-review/output-schema.md`. The `software_leverage_point` field MUST be `"purpose-and-scope"`.
+Non-goals are the highest-leverage scope discipline. They prevent drift the README cannot otherwise prevent, because they let contributors notice when a plan has drifted toward something the project deliberately said it would not do. A project with goals but no non-goals leaves contributors no way to detect drift until after the work has shipped.
 
-## Red Flags (anti-patterns to surface as findings)
+Quietly violating a stated non-goal is worse than never having stated it: future contributors trust the stated non-goal and the surprise is more expensive. If the non-goal is genuinely changing, change the document first.
 
-- **No written statement of purpose or non-goals.**
-  - What to flag: a repo whose README opens with install instructions but never names the problem the project solves, the users it serves, or the things it explicitly does not do.
-  - Why it matters: without a stated purpose, every contributor (human or agent) extrapolates one from the code, and extrapolations diverge. The conceptual integrity Brooks names as the most important property of a system needs an anchor; a one-paragraph purpose statement is the cheapest possible anchor.
-  - Cite: Frederick Brooks, *The Mythical Man-Month* (1975), on conceptual integrity as the most important consideration in system design. Cite also: the `PROJECT.md` and `ARCHITECTURE.md` conventions popularized by Andrew Gallant ("burntsushi") in canonical Rust projects.
+### 3. Plans and PRs trace back to the stated purpose
 
-- **Plan introduces a feature that does not match any stated user story or goal.**
-  - What to flag: a plan whose motivation is "would be nice," "for completeness," or "while we are here," with no link to a stated user, problem, or goal in the project's purpose document.
-  - Why it matters: unanchored features are scope debt. They consume the same review, test, and maintenance budget as anchored features but produce no purposeful value, and they make the system harder to reason about for everyone afterward. The Lean stance is to call this waste and refuse it at the plan stage.
-  - Cite: Mary and Tom Poppendieck, *Lean Software Development* (2003), on eliminating waste and just-in-time scope.
+Every plan or PR should answer: which user, which goal, which stated need does this serve? A plan whose motivation is "would be nice," "for completeness," or "while we are here" with no link to the purpose document is unanchored scope debt. It consumes the same review and maintenance budget as anchored work but produces no purposeful value.
 
-- **New dependency added without a purpose-link justification.**
-  - What to flag: a PR adding a library to `package.json`, `pyproject.toml`, or `Cargo.toml` whose justification is only "we needed X" with no reference to which user-facing or stated-purpose need it serves.
-  - Why it matters: a dependency is a permanent commitment and a supply-chain surface; it deserves a justification at the same level as a module. Tying every dependency back to the stated purpose prevents the slow drift toward "tool-of-the-week" syndrome and keeps the dependency graph reviewable.
-  - Cite: Donald Reinertsen, *Principles of Product Development Flow* (2009), on the cost of work-in-progress and the discipline of explicit acceptance criteria. Cross-reference: see the `dependencies` LP for the supply-chain cost.
+The Lean stance is to call this waste and refuse it at the plan stage, before code is written.
 
-- **Scope creeps within a single PR (plan said X, PR delivers X plus Y plus Z).**
-  - What to flag: a PR title or plan referencing one change while the diff includes refactoring, formatting, an unrelated bug fix, or a new feature alongside.
-  - Why it matters: scope-creeping PRs are unreviewable in proportion to the creep. Reviewers either skip the unrelated parts (defeating review) or block on them (delaying the original change). The discipline is one PR per axis of change, with the others extracted into their own PRs.
-  - Cite: John Ousterhout, *A Philosophy of Software Design* (chapter 9, "Better Together or Better Apart?"), on the problem of crammed scope.
+### 4. Scope-creep within a PR triggers a decomposition decision (scope: any change above a project-stated line threshold)
 
-- **Out-of-scope concerns added "while we are here" without owner sign-off.**
-  - What to flag: a plan or PR whose narrative includes "since we are touching this area" or "while refactoring," followed by changes that go beyond the original goal and were not approved as scope.
-  - Why it matters: opportunistic scope creep looks efficient (saving a future PR) but compounds the review burden and delays the original change. If the additional work is genuinely valuable, it deserves its own scope decision, not a smuggled-in addition. Michael Nygard's ADR practice generalizes here: scope changes deserve the same explicit decision capture as architecture changes.
-  - Cite: Michael Nygard's ADR practice generalized to scope decisions, not just architecture. Cite also: Reinertsen on WIP cost.
+This principle scopes to changes large enough that a reviewer cannot hold the full diff in working memory. Set an explicit threshold per project: a common starting heuristic is 400 lines changed across non-generated files. Below the threshold, mixed concerns are noise; above it, mixed concerns are a reviewability failure.
 
-- **Bounded contexts blurred at the project level.**
-  - What to flag: a plan that crosses concerns the repo was supposed to keep separate (e.g., a "data pipeline" repo growing a web UI, a "library" repo growing a CLI runtime that pulls in heavy dependencies).
-  - Why it matters: project-level bounded contexts exist so each repo can evolve on its own clock with its own constraints. Blurring them collapses the autonomy and forces every contributor to reason about both contexts simultaneously. The Domain-Driven Design strategic stance is that the bounded-context boundary is a deliberate decision, and crossing it deserves an ADR or a new repo.
-  - Cite: Eric Evans, *Domain-Driven Design* (2003), on bounded contexts at the strategic level.
+When the scope applies: one PR per axis of change. A PR titled "fix login bug" should not also reformat the codebase, refactor the auth module, and add a feature flag. The discipline is to extract the additional changes into their own PRs. If the additional work is genuinely valuable, it deserves its own scope decision.
 
-- **Stated non-goals quietly violated.**
-  - What to flag: a project that lists "we do not do X" in its README or charter ADR, where the plan or PR begins to do exactly X without acknowledging the contradiction.
-  - Why it matters: non-goals are the highest-leverage scope discipline because they prevent drift the README cannot otherwise prevent. Quietly violating a non-goal is worse than never having stated it, because future contributors will trust the stated non-goal and be surprised. If the non-goal is genuinely changing, change the README first.
-  - Cite: Brooks on conceptual integrity. Cite also: `PROJECT.md` conventions in canonical Rust projects, where non-goals are routinely listed alongside goals.
+### 5. New dependencies justify themselves against the stated purpose
+
+A dependency is a permanent commitment and a supply-chain surface. Adding one without a purpose-link justification ("we needed X" with no reference to which user-facing or stated-purpose need it serves) drifts the project toward tool-of-the-week syndrome and bloats the dependency graph reviewers must reason about.
+
+Cross-reference: see the `dependencies` lens for supply-chain cost; this lens carries the purpose-linkage check.
+
+### 6. Project-level bounded contexts are honored (scope: multi-context systems)
+
+This principle scopes to systems large enough to plausibly contain multiple bounded contexts: a monorepo of services, a library that could absorb a CLI runtime, a data-pipeline repo growing a web UI. Single-context POCs inherit only the loosest form.
+
+When the scope applies: each repo or top-level package evolves on its own clock with its own constraints. Blurring contexts (a "data pipeline" repo growing UI surface; a "library" growing a heavyweight runtime) collapses autonomy and forces every contributor to reason about both contexts simultaneously. Crossing the boundary deserves an ADR or a new repo, not a smuggled commit.
+
+### 7. Scope changes get the same decision capture as architecture changes
+
+When the project does decide to expand its scope, the change is captured the same way an architecture change is captured: a short ADR, a PR description that names the prior scope and the new one, or an update to the purpose document. Opportunistic scope creep ("since we are touching this area") that ships without capture is the failure mode this principle prevents.
+
+## Red Flags - STOP
+
+- No written statement of purpose; the README opens with install instructions but never names the problem the project solves or the users it serves
+- No stated non-goals; the project's "we do not do X" is tribal knowledge, not a document
+- Purpose lives in two or more places saying different things, with no canonical source linked from the others
+- Plan or PR introduces a feature with no link to a stated user, problem, or goal in the purpose document
+- New dependency added without justification against the stated purpose
+- PR exceeds the project's stated change-size threshold and bundles multiple axes of change with no decomposition
+- Out-of-scope work added "while we are here" with no scope-decision capture
+- Stated non-goals quietly violated without updating the document first
+- Project-level bounded contexts blurred (a repo absorbing a concern it was deliberately separated from) with no ADR
+
+## Rationalization Prevention
+
+| Excuse | Reality |
+|---|---|
+| "Everyone knows what this project does" | Until the third contributor extrapolates a different purpose and ships toward it |
+| "Non-goals are obvious" | Until they are quietly violated and the surprise is expensive |
+| "It's a small extra change, not worth its own PR" | Reviewability collapses in proportion to mixed scope; the extra change hides bugs |
+| "We need this dependency, trust me" | The dependency outlives the trust; the justification is what makes it reviewable later |
+| "While we are here, let me just fix this too" | Either it is in scope (then capture the expansion) or it is its own PR |
+| "We can document the scope expansion later" | Later doesn't come; the scope drift is now invisible |
+| "This repo can absorb that concern, it's all the same domain" | Until the two domains' release cadences collide |
+
+## Key Patterns
+
+```
+✅ README opens with: "This project does X for Y users. Non-goals: A, B, C."
+❌ README opens with install instructions and never names the problem
+```
+
+```
+✅ Purpose lives in PURPOSE.md; README links to it; plugin manifest links to it
+❌ Three docs say three different things about what the project is for
+```
+
+```
+✅ Plan: "Implement bulk export. Serves goal G2 in PURPOSE.md."
+❌ Plan: "Add bulk export. Would be nice for completeness."
+```
+
+```
+✅ PR: "Fix login bug." Diff: only login fix. Refactor noted as follow-up PR.
+❌ PR: "Fix login bug." Diff: fix + reformat + refactor + new feature flag.
+```
+
+```
+✅ New dep PR: "Adds parquet support; required by goal G3 (analytical exports)."
+❌ New dep PR: "Adds parquet; we needed it."
+```
+
+```
+✅ Scope expansion: ADR-0007 "Project now also covers X; rationale; updates PURPOSE.md."
+❌ Scope expansion: smuggled in via three PRs over a month, no capture
+```
+
+## Why This Matters
+
+Purpose-and-scope is the cheapest leverage in the entire plugin. A one-paragraph purpose statement plus a non-goals list prevents an entire class of drift that no amount of code review catches downstream.
+
+Without a stated purpose:
+
+- Contributors extrapolate purpose from code; extrapolations diverge.
+- Plans drift toward speculative or unanchored work; review budget burns on scope debt.
+- Dependencies accumulate by inertia; the supply-chain surface grows without justification.
+- Bounded contexts blur; one repo quietly becomes two.
+- Releases get larger and rarer because each one carries unrelated concerns.
+
+With a stated purpose and disciplined scope:
+
+- Every plan answers "which goal" before writing code.
+- PRs stay reviewable because each one names one axis of change.
+- Dependencies are reviewable because each one is justified.
+- Repos stay context-coherent; releases stay focused.
+- Contributors (human and agent) calibrate to the project's actual identity, not to an extrapolation.
+
+## Growth examples
+
+Soft sketch; not a checklist. Where appropriate is shaped by the target's maturity.
+
+- **POC / prototype:** a one-line README naming the problem and the user. Non-goals can be implicit. Awareness that the purpose document will need to be findable as the second contributor approaches.
+- **Growing internal tool:** a real purpose section in the README, with goals and non-goals enumerated. New dependencies start carrying a one-line justification. PRs stay small enough that mixed scope is a smell.
+- **Shared library:** purpose and non-goals are part of the published surface (README header, package metadata). Scope expansions are captured as ADRs because consumers need to reason about contract changes.
+- **Production service:** dedicated purpose document linked from the README; bounded-context boundaries are explicit (this service does X, not Y); scope-expansion ADRs are routine; dependency additions are reviewed against the purpose.
+- **Safety-critical:** purpose, scope, and non-goals are part of the release artifact and the certification record. Scope changes go through change control with sign-off; opportunistic scope creep is a process violation, not a style note.
 
 ## References & rationales
 
-The "why" behind the checks above, named so an agent can reason like a senior engineer:
+- **Frederick Brooks, *The Mythical Man-Month* (1975).** Backs principle 1 (stated purpose) and principle 2 (non-goals as conceptual integrity discipline). Conceptual integrity is named the most important consideration in system design; the purpose document is its cheapest possible anchor.
+- **Mary and Tom Poppendieck, *Lean Software Development* (2003).** Backs principle 3 (plans trace to purpose). Eliminating waste means refusing unanchored features at the plan stage.
+- **John Ousterhout, *A Philosophy of Software Design* (chapter 9, "Better Together or Better Apart?").** Backs principle 4 (scope-creep decomposition). The canonical argument that crammed scope makes a change unreviewable in proportion to the cramming.
+- **Donald Reinertsen, *Principles of Product Development Flow* (2009).** Backs principles 3, 5, and 7. The cost of work-in-progress and the discipline of explicit acceptance criteria for every unit of work, including scope changes.
+- **Eric Evans, *Domain-Driven Design* (2003), strategic patterns.** Backs principle 6 (project-level bounded contexts). Strategic context boundaries are deliberate decisions; crossing one deserves explicit capture.
+- **Michael Nygard, ADR practice.** Backs principle 7 (scope-change capture). Architecture Decision Records generalize from architecture to scope: any consequential decision deserves the same lightweight capture format.
+- **Andrew Gallant ("burntsushi") `PROJECT.md` conventions.** Backs principles 1 and 2. Canonical examples in popular Rust projects of explicit goals-and-non-goals documentation alongside the README.
 
-- **Frederick Brooks, *The Mythical Man-Month* (1975).** Conceptual integrity as the most important consideration in system design. Use this as the foundational stance behind every purpose-and-scope check.
-- **Eric Evans, *Domain-Driven Design* (2003).** Bounded contexts at the strategic level. Use this when justifying project-level scope boundaries and arguing against context-blurring.
-- **John Ousterhout, *A Philosophy of Software Design* (chapter 9).** "Better Together or Better Apart?" The problem of crammed scope. Use this when reviewing PRs that bundle multiple concerns.
-- **Mary and Tom Poppendieck, *Lean Software Development* (2003).** Eliminating waste and just-in-time scope. Use this when arguing against speculative or unanchored features.
-- **Donald Reinertsen, *Principles of Product Development Flow* (2009).** The cost of work-in-progress and explicit acceptance criteria. Use this when justifying scope-discipline at the plan stage.
-- **Michael Nygard's ADR practice.** Generalized from architecture decisions to scope decisions. Use this when arguing that scope changes deserve the same capture rigor as architecture changes.
-- **`PROJECT.md` and `ARCHITECTURE.md` conventions (Andrew Gallant / "burntsushi" style).** Canonical examples in popular Rust projects of explicit goals-and-non-goals documentation. Use this when recommending where to write the purpose statement.
+## Suggested technologies (as of 2026-04-28)
 
-Each red flag is a finding the agent emits with `severity: warn` or `severity: error` per the output schema, plus a `suggested_fix` that is concrete: name the `PURPOSE.md` or charter ADR to author, the non-goal to add, the unrelated change to extract into its own PR, the dependency to justify or remove, or the scope expansion to capture as an ADR.
+These go stale fast; the date is the "as-of." Verify currency before adopting. The principles above outlast specific tools and templates.
+
+- **Purpose-document homes:** README header section, dedicated `PURPOSE.md`, `ADR-0001` as project charter, package metadata `description` plus a linked long-form doc, plugin manifest with a `purpose` field. Pick one canonical home.
+- **ADR templates:** Michael Nygard's original short template, MADR (Markdown Any Decision Record) for richer structure, Y-Statements for one-line rationale capture. Any of these work; consistency within the project matters more than the template.
+- **Non-goals format:** an explicit "Non-goals:" bulleted list in the purpose document; periodically reviewed when a scope expansion is proposed.
+- **PR-size threshold:** a stated number (commonly 200-400 lines changed across non-generated files) plus a CI advisory or PR template line that prompts authors to decompose larger changes.
+- **Scope-decision capture:** ADRs in `docs/adr/` (or `docs/decisions/`); PR description templates that include "scope" and "out of scope" sections; commit-message conventions (Conventional Commits) that surface scope-expansion intent.
