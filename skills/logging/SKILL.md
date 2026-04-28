@@ -45,6 +45,35 @@ When the scope applies: generate a correlation ID at the edge (or accept one if 
 
 This principle scopes to systems instrumented with distributed tracing. When the scope applies: every log line emitted within a span carries the trace ID and span ID. Logs and traces stored separately with no shared identifier cannot pivot to each other; the slow span and the noisy log line are two facts that should be one.
 
+### 7. The logger is an injected dependency, not a global import
+
+A single logger instance owns configuration: format, level, sinks, redaction helpers, correlation context. Each module receives that logger by injection (constructor, parameter, or context object), not by importing a module-global directly.
+
+Centralizing configuration in one place means level changes, format changes, and redaction additions land in one file. Injection also makes the logger substitutable: tests pass a memory logger and assert on structured fields instead of capturing stdout.
+
+The red flag is "every module imports its own logger and configures it locally," which produces drift across modules and silently breaks central policy changes.
+
+### 8. Log at the seams; what to log at which level
+
+A log line is cheap to emit and expensive in aggregate. The discipline is to log at the seams of the system, not inside hot loops, and to match the level to what the line tells the reader.
+
+**Where to log:**
+- Entry and exit of subsystem or service boundaries (request handlers, queue consumers, scheduled jobs, public APIs of internal libraries).
+- State transitions (a record moved from `pending` to `processed`; a feature flag flipped; a circuit breaker opened).
+- Decisions the system made on the user's behalf (which provider was selected, which fallback fired, why a retry was skipped).
+- Error sites that catch and handle, with the cause chain attached. See the `error-handling` lens for how the error itself is structured.
+
+**Where not to log:** inside tight loops, per-iteration in batch processing (log once with a count), per-row of a query result, or anywhere the line is more frequent than the operator can read.
+
+**Level guidance:**
+- `error`: a human (or supervisor) must address it. Pages someone or shows up on a dashboard.
+- `warn`: a signal worth noticing but the system handled it (fallback fired, retry succeeded after N attempts, deprecated path used).
+- `info`: the durable narrative. Boundary entry/exit, state transitions, decisions. The line a future operator reads to reconstruct what happened.
+- `debug`: detail for active investigation. Off in production by default; enabled by flag or context.
+- `trace` (when present): per-call detail for development. Never enabled in production.
+
+The level policy named in principle 2 makes these definitions enforceable; this principle states the content discipline that makes the policy useful.
+
 ## Red Flags - STOP
 
 - Free-form string logs (`logger.info("user " + id + " did " + action)`) instead of structured (`logger.info("user_action", user_id=id, action=action)`)
@@ -55,6 +84,10 @@ This principle scopes to systems instrumented with distributed tracing. When the
 - Logs and traces in separate systems with no shared trace ID or span ID
 - Log files written by the application to local paths instead of streamed to stdout for the environment to route
 - Redaction applied at the sink rather than the logger boundary
+- Logger imported as a module global in every file; configuration drifts across modules and central policy changes silently miss callers
+- Logging inside hot loops or per-row in batch processing without aggregation; volume drowns the signal
+- Boundary calls (request handlers, queue consumers, scheduled jobs) emit no entry or exit log line; reconstructing what the system did requires inferring it from downstream effects
+- State transitions and consequential decisions go unlogged; the system's "why" is invisible to operators and to agent reviewers
 
 ## Rationalization Prevention
 
@@ -67,6 +100,9 @@ This principle scopes to systems instrumented with distributed tracing. When the
 | "Tokens are short-lived, logging them is fine" | Logs outlive tokens; the leak is durable |
 | "We don't need correlation, we know where the request goes" | Until a service is added, then the next debug session is timestamp-archaeology |
 | "Redaction at the sink is the same thing" | The intermediate copies are already written; redaction at the boundary is the only one that prevents leakage |
+| "Importing the logger globally is simpler" | Simpler to write, harder to change; central policy edits silently miss modules that configured their own |
+| "Logging at the seams is excessive; the code is self-explanatory" | Code explains what runs; logs explain what ran. Operators and agent reviewers read logs, not source |
+| "Agents can read the source to understand the system" | Source describes capability; logs describe actuality. Agents debugging or verifying need the runtime trace, not the static text |
 
 ## Key Patterns
 
@@ -95,6 +131,19 @@ This principle scopes to systems instrumented with distributed tracing. When the
 ❌ Logs in one system, traces in another, no shared identifier
 ```
 
+```
+✅ class OrderService:
+       def __init__(self, logger): self.log = logger
+   (logger injected; tests pass a memory logger and assert on fields)
+❌ from app.logging import logger
+   (every module imports the global; configuration drifts; tests capture stdout)
+```
+
+```
+✅ Boundary entry/exit + state transitions + decisions logged at info; errors at error with cause chain
+❌ logger.info inside the per-row loop of a 100k-record batch; signal drowns in volume
+```
+
 ## Why This Matters
 
 Logs are the cheapest observability primitive. They are also the one most likely to fail silently: free-form strings still "work," `print` still produces output, `error` still gets logged. The failure mode is not "logs missing"; it is "logs present but useless when needed."
@@ -112,6 +161,8 @@ With disciplined logging:
 - Secrets are redacted at the boundary; the leakage surface is bounded.
 - Levels are trusted; alerts fire on real signal.
 - Logs link to traces and metrics; the three pillars compose.
+
+**Logs are also the agent-facing feedback channel.** As LLM-driven test, review, and debugging agents become a regular part of the development loop, logs are how those agents verify behavior without re-running the system. A structured log stream lets an agent answer "did the request hit the auth boundary, fall through to the fallback provider, and emit a state transition" by reading fields, not by parsing prose. Codebases whose logs are structured, scoped to the seams, and free of secrets are codebases agents can review. Codebases whose logs are free-form, hot-loop spam, or absent at the seams force the agent back to source reading and re-runs, which is slower and less reliable than the runtime trace would have been.
 
 ## Growth examples
 
@@ -131,6 +182,9 @@ Soft sketch; not a checklist. Where appropriate is shaped by the target's maturi
 - **OWASP Top 10 A09 (Security Logging and Monitoring Failures).** Backs principle 4 (redaction at the boundary). Pairs "log too little to investigate" with "log too much and leak secrets."
 - **GDPR Article 5(1)(c), data minimization.** Backs principle 4 from the regulatory direction. Logs are processing; do not log more PII than the purpose requires.
 - **Brendan Gregg, USE method; Tom Wilkie, RED method.** Corroborate principle 1 (structure) from the metrics direction: logs feed metrics in well-instrumented systems, so field-name discipline matters.
+- **Robert C. Martin, *Clean Code* and *Clean Architecture*.** Backs principle 7 (logger as injected dependency). Dependency injection over global imports; testability follows from injection.
+- **Martin Fowler, "Inversion of Control Containers and the Dependency Injection pattern."** Backs principle 7 from the patterns direction: cross-cutting concerns (logging, configuration, time) are injected, not imported.
+- **Google SRE Book (Beyer et al., 2016), "Monitoring Distributed Systems."** Backs principle 8 (log at the seams; level guidance). The four golden signals and the discipline of logging boundary events for operability.
 
 ## Suggested technologies (as of 2026-04-28)
 
