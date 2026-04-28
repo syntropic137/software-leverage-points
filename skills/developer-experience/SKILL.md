@@ -1,89 +1,162 @@
 ---
 name: developer-experience
-description: "Use when reviewing developer experience concerns: onboarding time, dev-loop speed, error message quality, documentation discoverability, scripting/task-runner ergonomics, IDE/editor support"
+description: "Use when reviewing developer-experience concerns: onboarding-time budget, inner-loop speed, task-runner discoverability, error-message actionability, formatter/linter automation, AI-agent ergonomics, reproducible local environment"
 ---
 
-# Developer Experience Leverage Point
+# Developer Experience
 
-## When to Use
+## Overview
 
-- A planning agent is reviewing a plan that alters how developers (or AI agents) interact with the codebase: README, build scripts, task runners, devcontainers, error messages, formatter/linter, IDE config
-- A PR-review agent encounters changes to onboarding instructions, dev-loop tooling, or contributor-facing scripts
-- The orchestrator (`software-leverage-review`) fans out a subagent for developer experience
+Developer experience is the surface where contributors (human and agent) meet the codebase. Done well, a fresh clone is productive in under thirty minutes, the inner loop is fast enough to support flow, errors name what to do next, and the task runner is self-documenting. Done poorly, onboarding is a scavenger hunt, the inner loop costs minutes per iteration, errors say "something went wrong," and tribal knowledge is the only path to productivity.
 
-## When NOT to Use
+**Core principle:** Friction at the inner loop is paid every day. The leverage of DX is not in any single check; it is in compounding the small wins until the system is pleasant to work in.
 
-- For end-user UX: that is a product concern, not this LP
-- For API documentation as a contract surface: that is the `documentation` LP. This LP cares about contributor-facing ergonomics; the two LPs cross-reference at the README and example boundaries.
+## Core Principles
 
-## Input
+### 1. One-command onboarding to a working state (scope: projects with multiple contributors)
 
-`target`: a file path, directory, plan document, or git diff to review.
+This principle scopes to projects with more than one contributor (current or anticipated). When the scope applies: a fresh clone reaches a working state in under thirty minutes, ideally via one command (`bin/setup`, `just bootstrap`, devcontainer open, or equivalent). The README names prerequisites, install, run-locally, and test commands, and they all match the current scripts.
 
-## Workflow
+**Multiple valid bootstrap mechanisms exist:** devcontainer, Nix flake, `bin/setup` script, language-native bootstrap (`uv sync`, `pnpm install`, `cargo build`), or a documented sequence in the README. The principle is: pick one and keep it current. The red flag is "no working onboarding path," not "did not pick devcontainers."
 
-1. Read the `target`.
-2. Detect DX artifacts: `README.md`, `CONTRIBUTING.md`, task runner (`Makefile`, `justfile`, `package.json` scripts, `pyproject.toml` `[tool]`), devcontainer, `.editorconfig`, recommended-extensions file, formatter and linter config, error-message helpers.
-3. Apply checks:
-   - Can a new contributor (or agent) reach a working state in under 30 minutes from a fresh clone?
-   - Is the inner loop (edit then check then test) fast enough to support flow, targeting under 30 seconds for a single-file change?
-   - Are error messages actionable, naming the cause and a suggested next step, not just stack traces?
-   - Is the task runner self-documenting? Does `make help`, `just --list`, or `npm run` show every useful target?
-   - Are formatter and linter rules autofixed, not bickered about in PR review?
-   - Are IDE configurations checked in (devcontainer, `.editorconfig`, recommended extensions)?
-4. Emit findings using the schema at `../software-leverage-review/output-schema.json` (authoritative) / `output-schema.md` (human-readable). The `software_leverage_point` field MUST be `"developer-experience"`.
+### 2. Inner loop fast enough for flow
 
-## Output
+A single-file change should reach feedback in under thirty seconds: format, lint, type-check, run the relevant tests. A five-minute loop drives developers to context-switch, batch changes, and lose the tight feedback that catches bugs early. Watch modes, incremental compilation, and targeted-test selection are the canonical mechanisms.
 
-Conforms to `../software-leverage-review/output-schema.md`. The `software_leverage_point` field MUST be `"developer-experience"`.
+Iteration speed is a design dimension, not a happy accident.
 
-## Red Flags (anti-patterns to surface as findings)
+### 3. Error messages name what to do next
 
-- **README missing install or run-locally instructions, or instructions out of date.**
-  - What to flag: a `README.md` that does not name the prerequisites, the install command, the run-locally command, and the test command, or instructions that no longer match the current scripts.
-  - Why it matters: the README is the onboarding contract; if it lies or omits, every new contributor and every agent wastes time reverse-engineering setup. Diátaxis names this the tutorial mode, and a working tutorial is the difference between a 20-minute onboarding and a 2-hour one.
-  - Cite: Daniele Procida, the Diátaxis framework, on tutorials as the onboarding documentation mode. Cite also: Andrew Hunt and David Thomas, *The Pragmatic Programmer* (2nd ed., 2019), on personal automation and the cost of friction at the inner loop.
+Catch-all "something went wrong" messages, exceptions re-raised without context, and CLI failures that print only "Error" are unbounded debugging sessions. Good error messages name what was attempted, what went wrong, and what the developer can try next. Error quality is the highest-leverage point in the operational loop.
 
-- **Dev loop slow without parallelization, caching, or incremental compilation.**
-  - What to flag: a single-file change that triggers a full-project rebuild or a full-suite test run, with no watch mode, no incremental cache, and no targeted-test command.
-  - Why it matters: iteration speed is a design dimension. A 30-second loop supports flow; a 5-minute loop drives developers to context-switch, batch changes, and lose the tight feedback that catches bugs early. The fix is usually known (incremental builds, test selection) but never prioritized until DX is reviewed as a leverage point.
-  - Cite: Jonathan Blow and Casey Muratori on compile-time as a design dimension and the value of fast iteration loops. Cite also: *The Pragmatic Programmer* on the inner loop.
+### 4. Task runner is self-documenting
 
-- **Error messages that say "something went wrong" without the something.**
-  - What to flag: catch-all error handlers that log a generic message, exceptions re-raised without context, or CLI failures that print only "Error" with no cause or suggestion.
-  - Why it matters: an unactionable error message is an unbounded debugging session. A good error names what was attempted, what went wrong, and what the developer can try next. Charity Majors' "developers in production" argues the operational loop is part of DX, and error quality is the highest-leverage point in that loop.
-  - Cite: Charity Majors on developers in production and operational DX. Cite also: Brett Slatkin and the *Effective Python* tradition on error message quality.
+A task runner is the project's CLI for contributors. `make help`, `just --list`, `pnpm run`, or equivalent must show every useful target with a one-line description of when to use it. An undocumented task runner is rediscovered by every new contributor; the most useful targets stay tribal.
 
-- **Task runner full of opaque one-liners with no `help` target.**
-  - What to flag: a `Makefile` or `package.json` `scripts` block where target names are abbreviated, undocumented, and there is no `make help` or `just --list` showing what each target does and when to use it.
-  - Why it matters: a task runner is the project's CLI for contributors; an undocumented CLI is rediscovered by every new contributor, and the most useful targets stay tribal. Self-documentation is cheap (one comment per target) and the leverage is daily.
-  - Cite: Kelsey Hightower on the principle of least surprise as a tooling design constraint.
+**Multiple valid task-runner choices exist:** `just`, `make`, `npm`/`pnpm` scripts, language-native (`cargo`, `uv`, `dotnet`), or a thin `bin/` directory of scripts. The principle is: one canonical entry point for common tasks, self-documenting, named consistently. The red flag is "scripts scattered with no help target," not "did not pick `just`."
 
-- **Formatter rules debated in PR threads.**
-  - What to flag: review comments arguing about whitespace, import order, quote style, or semicolons, in a project with no autoformatter run on save and in CI.
-  - Why it matters: formatter debate is pure waste. The decision is arbitrary, but the cost of relitigating it on every PR is real. An autoformatter (`prettier`, `black`, `gofmt`, `rustfmt`) plus a pre-commit hook ends the debate and frees review attention for substance.
-  - Cite: Adrienne Friend on Developer Experience as a measurable engineering concern; formatter automation is the canonical zero-thought DX win.
+### 5. Formatter and linter rules are autofixed, not relitigated
 
-- **New contributor must reverse-engineer environment setup from scattered docs.**
-  - What to flag: required env vars, tool versions, or system deps mentioned only in obscure files, comments, or chat history, with no single source of truth.
-  - Why it matters: scattered setup is tribal-knowledge tax. A devcontainer or a single `bin/setup` script that bootstraps the whole environment is the canonical fix; failing that, a single section of the README that names every tool and version is the minimum bar.
-  - Cite: *The Pragmatic Programmer* (Hunt and Thomas) on personal automation and reproducible environments.
+Whitespace, import order, quote style, and semicolon debates in PR review are pure waste. The decision is arbitrary, but the cost of relitigating it on every PR is real. An autoformatter plus a pre-commit hook plus a CI check ends the debate and frees review attention for substance.
 
-- **AI agents cannot onboard from the README alone.**
-  - What to flag: a project where an autonomous agent reading the README cannot identify the entry points, the test command, the dev loop, or where to file findings.
-  - Why it matters: agentic contributors are now part of the DX surface. A README that assumes prior context fails for agents the same way it fails for new humans, but agents fail silently (they hallucinate) where humans ask. Treating the README as a machine-readable onboarding contract is the forward-compatible stance.
-  - Cite: Adrienne Friend on DX measurement and Charity Majors on the operational loop, generalized to non-human contributors.
+### 6. Reproducible environment, declared and committed
+
+Required env vars, tool versions, and system dependencies live in committed artifacts (devcontainer config, Nix flake, `.tool-versions`, `mise.toml`, `setup` script, or a single README section), not in chat history or one developer's head. Tribal-knowledge tax is the canonical DX failure mode.
+
+**Multiple valid reproducible-environment approaches exist:** devcontainer, Nix flake, version-manager declaration (`asdf`/`mise`/`rtx`), VM/Vagrant, or a setup script with version assertions. The principle is: pick one and keep it canonical. The choice depends on the team's existing tooling; consistency within a project matters more than vendor.
+
+### 7. AI-agent ergonomics on equal footing with human ergonomics (scope: agent-driven workflows)
+
+This principle scopes to projects where AI agents read the codebase as part of normal contribution flow. When the scope applies: the README, task-runner help text, and error messages must enable an autonomous agent reading them alone to identify entry points, the test command, the dev loop, and where to file findings.
+
+Agents fail silently where humans ask. A README that assumes prior context fails for agents the same way it fails for new humans, but the agent hallucinates instead of pausing. Treat machine readers as first-class.
+
+## Red Flags - STOP
+
+- README missing prerequisites, install, run-locally, or test instructions, or the instructions no longer match the current scripts
+- Onboarding path takes more than two hours from a fresh clone, or requires tribal-knowledge debugging to complete
+- Single-file change triggers a full-project rebuild or full-suite test run with no watch mode, no incremental cache, no targeted-test command
+- Error messages that say "something went wrong" without naming the cause or a suggested next step; catch-all handlers that swallow context
+- Task runner with abbreviated, undocumented targets and no `help`/`--list` output showing what each does
+- Whitespace, import-order, or quote-style debates in PR review threads in a project with no autoformatter on save and in CI
+- Required env vars or tool versions discoverable only from chat history or a single developer's setup
+- README assumes prior context an autonomous agent could not recover from the repo alone (entry points, test command, dev loop unstated)
+
+## Rationalization Prevention
+
+| Excuse | Reality |
+|---|---|
+| "Setup is in the README somewhere" | Onboarding tax compounds; every new contributor pays it again |
+| "The dev loop is fine for the people who know the tricks" | Tribal performance is a tax, not a feature |
+| "We can grep for that error" | Multiplied across every contributor and every occurrence; a one-line hint pays back in hours |
+| "Everyone knows what `make build-x` does" | New contributors and agents don't; self-documentation is one comment per target |
+| "We just agree informally on formatting" | Until the next PR with a formatter debate; the decision is arbitrary, the cost is daily |
+| "Agents will figure it out" | They hallucinate when they can't; that surfaces later as wrong PRs, not a confused human asking |
+| "Devcontainers are over-engineering for a small team" | Until the third onboarding takes a week each |
+
+## Key Patterns
+
+```
+✅ git clone && bin/setup && just test  (works on a fresh clone in under 30 minutes)
+❌ git clone && [scavenger hunt across README, chat, and one developer's notes]
+```
+
+```
+✅ Save file → format-on-save → typecheck in 2s → relevant tests in 5s
+❌ Save file → manual format → full rebuild in 90s → full suite in 5 minutes
+```
+
+```
+✅ Error: "DATABASE_URL not set. Add it to .env (see .env.example) or export it."
+❌ Error: "Connection failed."
+```
+
+```
+✅ just --list  →  test, lint, build, fmt, typecheck, db-reset (each with a description)
+❌ Makefile with 40 targets, no help, half of them obsolete
+```
+
+```
+✅ Pre-commit hook runs formatter; CI re-checks; PR review never mentions whitespace
+❌ "nit: please run prettier" appears on every other PR
+```
+
+```
+✅ README: "Tools: Node 22, pnpm 9, Postgres 16. Run: pnpm install && pnpm dev"
+❌ README: "Install dependencies and run the dev server" (versions and commands unstated)
+```
+
+## Why This Matters
+
+Developer experience is the integral of every contributor-hour spent in the inner loop. The cost of poor DX is paid not at any single moment but in slowed iteration, batched changes, lost flow, longer onboarding, and contributor turnover.
+
+Without disciplined DX:
+
+- Onboarding stretches from minutes to days; new contributors quit before they ship.
+- Inner loops stretch from seconds to minutes; flow becomes impossible.
+- Errors waste hours that a one-line hint would have saved.
+- Task runners accumulate undocumented one-liners that only the original author understands.
+- Formatter debates eat review attention that should go to substance.
+- Agents fail silently because the README assumes context they cannot recover.
+
+With disciplined DX:
+
+- Fresh clone to working state is one command and under thirty minutes.
+- The inner loop supports flow.
+- Errors carry their own next-step hint.
+- The task runner is the project's self-documenting CLI.
+- Formatter and lint disagreements are resolved by tooling, not threads.
+- Agents and humans onboard from the same readable artifacts.
+
+## Growth examples
+
+Soft sketch; not a checklist. Where appropriate is shaped by the target's maturity.
+
+- **POC / prototype:** README names install and run commands, even if the bootstrap is a one-liner. Errors carry enough context to debug. Awareness that the inner loop will need to be fast as the codebase grows.
+- **Growing internal tool:** task runner with a help target; autoformatter on save and in CI; first attempt at a reproducible-environment artifact (committed tool versions, setup script, or devcontainer). Inner loop tracked.
+- **Shared library:** consumers can run examples from the README in under five minutes; error messages from the public API name the cause and suggest the fix; contributing guide names the test and release commands.
+- **Production service:** one-command bootstrap; sub-thirty-second inner loop on the common change; task-runner help is reviewed alongside the code it drives; formatter/linter is non-negotiable in CI; errors are reviewed for actionability as part of design review.
+- **Safety-critical:** reproducible environment is part of the release artifact; onboarding paths are tested in CI (the bootstrap script runs on a fresh image); error messages carry runbook links; agent-readable contribution guides are kept in sync with human-readable ones.
 
 ## References & rationales
 
-The "why" behind the checks above, named so an agent can reason like a senior engineer:
+- **Andrew Hunt and David Thomas, *The Pragmatic Programmer* (2nd ed., 2019).** Backs principle 1 (onboarding) and principle 6 (reproducible environment). The inner-loop and personal-automation framing is the foundation behind every DX check.
+- **Jonathan Blow and Casey Muratori, on compile-time as a design dimension.** Backs principle 2 (inner loop fast enough for flow). Iteration speed is a property of the tooling, designed in deliberately.
+- **Charity Majors, on developers in production.** Backs principle 3 (error messages name next steps). The operational loop is part of DX; error quality is the highest-leverage point in it.
+- **Adrienne Friend, on Developer Experience as a measurable engineering concern.** Backs principle 5 (autofixed formatter rules) and principle 6 (reproducible environment). DX as a measurable surface, not a vibe.
+- **Daniele Procida, the Diátaxis framework.** Backs principle 1. The four documentation modes; tutorials onboard, how-to gets work done. The README as the onboarding contract.
+- **Brett Slatkin, *Effective Python* tradition.** Backs principle 3. Series-level guidance on error-message quality and idiomatic ergonomics.
+- **Kelsey Hightower, on the principle of least surprise.** Backs principle 4 (self-documenting task runner). Tooling that behaves predictably wins the daily-use battle.
+- **Adrienne Friend and Charity Majors generalized to non-human contributors.** Backs principle 7 (AI-agent ergonomics). The same DX surface that fails new humans fails new agents, but agents fail silently.
 
-- **Andrew Hunt and David Thomas, *The Pragmatic Programmer* (2nd ed., 2019).** The inner loop, personal automation, and the cost of friction at the smallest scale of work. Use this as the foundational stance behind every DX check.
-- **Jonathan Blow and Casey Muratori on compile-time as a design dimension.** Fast iteration loops as a design property of the tooling, not a happy accident. Use this when justifying watch modes, incremental compilation, and test selection.
-- **Charity Majors on developers in production.** DX includes the operational loop; error quality and observability are part of the DX surface. Use this when justifying actionable error messages.
-- **Adrienne Friend on Developer Experience.** DX as a measurable engineering concern. Use this when justifying formatter automation and devcontainer adoption.
-- **Daniele Procida, the Diátaxis framework.** The four documentation modes (tutorial, how-to, reference, explanation); tutorials onboard, how-to gets work done. Use this when reviewing README structure.
-- **Brett Slatkin, *Effective Python*.** The series-level guidance on error messages and idiomatic Python ergonomics. Use this when reviewing error helpers.
-- **Kelsey Hightower on the principle of least surprise.** Tooling that behaves predictably wins the daily-use battle. Use this when reviewing task-runner ergonomics.
+## Suggested technologies (as of 2026-04-28)
 
-Each red flag is a finding the agent emits with `severity: warn` or `severity: error` per the output schema, plus a `suggested_fix` that is concrete: name the README section to add, the watch-mode flag to enable, the autoformatter to wire into pre-commit, the `help` target to add, or the devcontainer to commit.
+These go stale fast; the date is the "as-of." Verify currency before adopting. The principles above outlast specific tools; if a tool here is no longer maintained, the patterns transfer to its replacement.
+
+- **Task runners:** `just` (cross-platform, self-documenting via `just --list`), GNU `make` (ubiquitous, less ergonomic), `pnpm`/`npm` scripts (JS ecosystem), `cargo`/`uv` (language-native), `mise tasks` (version-manager-integrated). Pick one canonical entry point.
+- **Reproducible environments:** devcontainers (VS Code / GitHub Codespaces), Nix or `nix-direnv` (declarative and reproducible), `mise`/`asdf`/`rtx` (version managers via `.tool-versions`), `bin/setup` scripts with version assertions.
+- **Formatters and linters:** Prettier (JS/TS/CSS/MD), Biome (faster JS/TS), Black + Ruff (Python), gofmt + golangci-lint (Go), rustfmt + clippy (Rust), shfmt (shell). Pre-commit hooks via `lefthook`, `pre-commit`, or `husky`.
+- **Watch modes / incremental:** Vite/esbuild (JS/TS), `pytest --testmon` or `--lf` (Python), `cargo watch` (Rust), `air`/`reflex` (Go). Targeted-test selection by file or marker.
+- **Error-message quality:** custom error types with structured fields; `Error.cause` chaining (JS/TS); `raise X from Y` (Python); `anyhow`/`thiserror` (Rust); structured logging to make errors searchable.
+- **Documentation discoverability:** README-driven onboarding; `CONTRIBUTING.md` for the contributor loop; auto-generated task-runner help; per-script docstrings.
+- **AI-agent ergonomics:** `AGENTS.md` or `CLAUDE.md` files at repo root naming entry points and conventions; machine-readable task-runner help; consistent script naming conventions.

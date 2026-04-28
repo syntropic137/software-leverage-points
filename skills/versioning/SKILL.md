@@ -1,89 +1,167 @@
 ---
 name: versioning
-description: "Use when reviewing versioning concerns: semver discipline, changelog hygiene, deprecation policy, migration path, backward compatibility, version locking and resolution"
+description: "Use when reviewing versioning concerns: declared scheme (semver/calver/ZeroVer), changelog hygiene, deprecation policy and migration paths, public-API stability classification, version-bump automation, manifest-drift across multiple files"
 ---
 
-# Versioning Leverage Point
+# Versioning
 
-## When to Use
+## Overview
 
-- A planning agent is reviewing a plan that introduces breaking changes, deprecations, version bumps, or alters changelog/release-notes practice
-- A PR-review agent encounters changes to public-API surface, version manifests, or deprecation markers
-- The orchestrator (`software-leverage-review`) fans out a subagent for versioning
+Versioning is the social contract a released artifact carries with its consumers. Done well, the versioning scheme is declared, the changelog names user-visible changes, deprecations precede removals, the public surface is explicitly classified, and version bumps cannot drift across manifest files. Done poorly, breaking changes hide behind patch bumps, the changelog says "various improvements," removals surprise consumers at upgrade time, and version edits drift between `package.json` and `pyproject.toml` because nobody automated the bump.
 
-## When NOT to Use
+**Core principle:** Versioning is a stated contract, applied consistently, with deprecation as the bridge between accretion and breakage. The scheme matters less than the discipline of stating it and following it.
 
-- For dependency version pinning and lockfile resolution: that is the `dependencies` LP. This LP cares about the project's own versioning contract with consumers; the two LPs cross-reference at the manifest boundary.
-- For release deployment mechanics (canaries, rollbacks, environments): that is the `continuous-deployment` LP.
-- For implicit-contract drift in PRIVATE packages or internal CLIs (Hyrum's Law applies, but the versioning LP is scoped to publicly-versioned surfaces with a stated semver/calver/etc. discipline; for private contracts, use the `architecture` LP for layer-boundary review).
+## Core Principles
 
-## Input
+### 1. Declare the versioning scheme; apply it consistently (scope: publicly-versioned APIs)
 
-`target`: a file path, directory, plan document, or git diff to review.
+This principle scopes to artifacts versioned for consumers other than the producing team: published libraries, public APIs, deployable artifacts whose version consumers pin on. When the scope applies: the project declares which versioning scheme it follows, in `README` or release docs, and applies it without exceptions.
 
-## Workflow
+**Multiple valid versioning schemes exist:**
 
-1. Read the `target`.
-2. Detect versioning artifacts: version field(s) in `package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod`, `CHANGELOG.md`, `RELEASE-NOTES.md`, deprecation markers, public-API stability classifications, version-bump scripts, conventional-commit config.
-3. Apply checks:
-   - Does the project follow semver, or another explicit and documented versioning policy?
-   - Is there a `CHANGELOG` or `RELEASE-NOTES` that names breaking changes, new features, and fixes per release?
-   - Are deprecations announced before removal, with a migration path?
-   - Are version bumps automated or scripted, not manual edits across multiple manifest files?
-   - Does the public API surface track versioning explicitly (e.g., `v1` URL prefix, exported types tagged with stability)?
-4. Emit findings using the schema at `../software-leverage-review/output-schema.json` (authoritative) / `output-schema.md` (human-readable). The `software_leverage_point` field MUST be `"versioning"`.
+- **Semver (semantic versioning):** MAJOR.MINOR.PATCH; MAJOR for incompatible changes, MINOR for additions, PATCH for fixes.
+- **Calver (calendar versioning):** YYYY.MM or YY.MM.PATCH; the version encodes when, not what.
+- **ZeroVer (0.x.y permanent):** explicitly opting out of stability commitments; legitimate for projects that document the stance.
 
-## Output
+The principle is: state the scheme, apply it consistently, document the choice. The red flag is "no stated scheme" or "inconsistent application," not "did not pick semver." For semver specifically: a breaking change at minor or patch is a contract violation regardless of the changelog.
 
-Conforms to `../software-leverage-review/output-schema.md`. The `software_leverage_point` field MUST be `"versioning"`.
+### 2. Changelog names user-visible changes per release (scope: any released artifact)
 
-## Red Flags (anti-patterns to surface as findings)
+This principle scopes to any artifact with versioned releases (libraries, services with API versions, deployable artifacts with rollback semantics). When the scope applies: a `CHANGELOG.md`, release notes, or equivalent names the user-visible changes per release. Entries describe the user-facing impact, not the implementation detail.
 
-- **Version field bumped manually with drift across multiple manifest files.**
-  - What to flag: a version edited by hand in `package.json` but not in `pyproject.toml`, in `Cargo.toml` but not in `__init__.py`, or in the manifest but not in the docs site config.
-  - Why it matters: manual bumps drift; drifted versions confuse consumers, package managers, and observability. A single source of truth (a script, a `bump-version` tool, or a release-please bot) keeps every manifest in lockstep with one command.
-  - Cite: Conventional Commits (conventionalcommits.org) for the commit-driven version-bump automation hook. Cite also: `release-please` and `semantic-release` as canonical implementations.
+**Multiple valid changelog formats exist:** Keep a Changelog (six categories: Added / Changed / Deprecated / Removed / Fixed / Security), conventional-commits-generated changelog, custom format, or release-notes paragraphs. The principle is: pick one, populate it with user-visible language, keep it current. The red flag is "various improvements" entries or empty release sections, not "did not use Keep a Changelog specifically."
 
-- **Breaking changes shipped without a major-version bump.**
-  - What to flag: a change to a public function signature, a removed export, a renamed CLI flag, or an incompatible config schema, in a release that bumps only patch or minor.
-  - Why it matters: semver is a social contract; consumers pin on the contract, not on the changelog. A breaking change at minor is a silent foot-gun for every downstream caller. The fix is either to bump major or to keep the old surface as a deprecated alias for one minor cycle.
-  - Cite: Tom Preston-Werner, semver.org (Semantic Versioning 2.0.0), the canonical contract: MAJOR for incompatible API changes, MINOR for additions, PATCH for fixes.
+### 3. Deprecate before removing; document the migration path
 
-- **Deprecations removed without prior announcement.**
-  - What to flag: a function, flag, or config key removed in version N where N-1 did not mark it deprecated and did not name a removal version.
-  - Why it matters: an undocumented removal forces every consumer to discover the change at upgrade time, often in production. The deprecation discipline is one minor cycle of warnings before removal at the next major; that is the cheapest possible migration aid and the canonical norm.
-  - Cite: Rich Hickey, "Spec-ulation" (2016), on the social contract of versioning: accretion and relaxation are safe, breaking is not, and deprecation is the bridge between them.
+A function, flag, or config key removed in version N must have been marked deprecated in N-1 (or earlier), with a named removal version and a documented migration path. An undocumented removal forces every consumer to discover the change at upgrade time, often in production.
 
-- **Changelog entries that say "various improvements" instead of named user-visible changes.**
-  - What to flag: a `CHANGELOG.md` release section that lists "bug fixes," "improvements," or "internal cleanup" with no specific user-visible items, or entries that describe the implementation rather than the user-facing change.
-  - Why it matters: an opaque changelog forces consumers to read the diff to decide whether to upgrade. The "Keep a Changelog" format names six categories (Added, Changed, Deprecated, Removed, Fixed, Security) and demands user-visible language. The discipline is what makes the changelog actually useful at upgrade time.
-  - Cite: Olivier Lacan and contributors, "Keep a Changelog" (keepachangelog.com), the canonical changelog format.
+Deprecation is the bridge between accretion (safe to add) and breakage (not safe to remove). The deprecation discipline is one minor cycle of warnings before removal at the next major; that is the cheapest possible migration aid.
 
-- **No public-API stability classification (everything is implicitly stable).**
-  - What to flag: a library exporting every internal helper alongside its public types, with no `@public` or `@internal` annotation, no `_underscore_prefix` convention, and no stability tag in the docs.
-  - Why it matters: without a public-vs-internal boundary, every export is a de facto stability commitment, and refactoring the internals becomes a breaking change. Naming the surface (whether by convention, decorator, or documented list) is the prerequisite for honest semver.
-  - Cite: Andrew Hunt and David Thomas, *The Pragmatic Programmer*, on stability and explicit versioning. Cite also: Linus Torvalds on the "we don't break userspace" rule of the Linux kernel as the upper bound of the discipline.
+### 4. Public surface is explicitly classified
 
-- **"0.x" used as a permanent state to avoid semver discipline.**
-  - What to flag: a project past its first production users still on `0.x.y` with no plan to ship 1.0, citing "we might still break things" as the reason.
-  - Why it matters: semver's pre-1.0 license is a brief one. A project with real users that stays at 0.x is choosing to opt out of the social contract, which costs consumers more than it saves the maintainer. The right move is either to commit to 1.0 (and the discipline that follows) or to document the policy explicitly so consumers can plan.
-  - Cite: David Heinemeier Hansson on the cost of premature 1.0; the inverse argument applies to the cost of permanent 0.x. Cite also: semver.org section 4 on initial development.
+A library or API that exports every internal helper alongside its public types makes every export a de facto stability commitment. Naming the surface (whether by `@public`/`@internal` annotation, underscore prefix, an `__all__`/index file, or a documented stability list) is the prerequisite for honest semver: the maintainer can refactor internals safely only when "internal" is stated.
 
-- **Version bumps automated but changelog or release notes are not.**
-  - What to flag: a `release-please` or `semantic-release` setup that bumps the version cleanly but produces a generic or empty changelog.
-  - Why it matters: half-automation is worse than none, because it produces the appearance of a changelog without the content. Conventional Commits plus an automated changelog generator should produce categorized, human-readable entries; if it does not, the commit messages or the config need a fix.
-  - Cite: Conventional Commits and "Keep a Changelog" together as the canonical pairing.
+### 5. Version bumps are automated or scripted across all manifest files
+
+A single source of truth (a `bump-version` script, a release-please bot, a workspace tool) keeps every manifest in lockstep with one command. Manual edits drift; drifted versions confuse consumers, package managers, and observability.
+
+**Multiple valid bump mechanisms exist:** commit-driven automation (release-please, semantic-release based on conventional commits), tag-driven (`git tag` triggers a release pipeline), manual bump via a single script that updates every manifest. The principle is: one command updates every manifest. The red flag is "version field edited by hand in some manifests but not others," not "did not adopt release-please."
+
+### 6. Commit-message convention supports release tooling (scope: projects with automated release tooling)
+
+This principle scopes to projects using automated changelog or version-bump tooling that derives intent from commit messages. When the scope applies: a stated convention governs commit messages so the tool can categorize changes correctly.
+
+**Multiple valid commit conventions exist:** Conventional Commits (`feat:`/`fix:`/`feat!:`), gitmoji, project-defined prefixes, or PR-label-driven categorization. The principle is: state the convention, enforce it (commit hook or PR check), let the release tool consume it. The red flag is "automation expects a convention but commits ignore it," not "did not use Conventional Commits."
+
+### 7. Half-automation is worse than none
+
+A `release-please` or `semantic-release` setup that bumps the version cleanly but produces a generic or empty changelog produces the appearance of release discipline without the content. If automation produces opaque entries, fix the commit messages, the config, or the categorization rule, do not ship the empty changelog.
+
+## Red Flags - STOP
+
+- No stated versioning scheme; consumers cannot tell whether MAJOR-MINOR-PATCH means semver, calver, or something else
+- Breaking change shipped at minor or patch under semver; signature changed, export removed, or config schema incompatibly altered without a major bump
+- Changelog entries that say "various improvements," "internal cleanup," or "bug fixes" with no specific user-visible items, or release sections empty
+- Deprecation removed without a prior warning release, or removed without a documented migration path
+- Library or API exports every internal helper alongside its public types with no `@public`/`@internal` distinction or stability classification
+- Version edited by hand in some manifest files but not others (`package.json` and `pyproject.toml` and `__init__.py` drifted)
+- Project adopts conventional-commits or release-please but commit messages routinely ignore the convention; the changelog is a lie
+- Project past its first production users still on `0.x.y` permanently with no documented stance on why and no plan to ship 1.0 (or to declare ZeroVer explicitly)
+
+## Rationalization Prevention
+
+| Excuse | Reality |
+|---|---|
+| "It's a small change, minor is fine" | Consumers pin on the contract; "small" at minor still breaks pinned builds |
+| "Nobody reads the changelog" | The next person debugging a regression reads it; populate it for them |
+| "We deprecated it in chat" | Chat is not a release artifact; the deprecation is in the warning released to consumers |
+| "The version is in `package.json`, that's enough" | Until `pyproject.toml` and the docs site config drift; the public version is whichever consumer hits which manifest first |
+| "0.x means we can change anything" | Real users are pinned anyway; the version is an honesty marker, not a license |
+| "Conventional commits are too rigid" | Half-following them produces wrong changelogs; commit fully or pick a different convention |
+| "Internal/public is obvious from context" | Until a refactor of "obvious internals" breaks a consumer that imported them; classify the surface |
+
+## Key Patterns
+
+```
+✅ README: "This project follows Semantic Versioning 2.0.0."
+❌ No stated scheme; version 1.4.0 → 1.5.0 contains a breaking signature change
+```
+
+```
+✅ ## [2.3.0] - 2026-04-28
+   ### Added
+   - `parseStrict` option on `validate()` rejects unknown keys
+   ### Deprecated
+   - `legacyParse()`; will be removed in 3.0.0; use `parse({ strict: true })`
+❌ ## 2.3.0
+   - Various improvements and bug fixes
+```
+
+```
+✅ Version 1.x emits DeprecationWarning on `oldFn()`; 2.0 removes it; migration named in CHANGELOG
+❌ Version 2.0 removes `oldFn()` with no prior warning; consumers discover at upgrade
+```
+
+```
+✅ Public exports listed in index; internal modules underscore-prefixed; stability documented
+❌ Every internal helper exported; refactoring internals breaks consumers
+```
+
+```
+✅ One command bumps version in package.json, pyproject.toml, __init__.py, and docs config
+❌ Version edited by hand in three manifests; one is forgotten; published version drifts
+```
+
+## Why This Matters
+
+Versioning is the contract every consumer reads when deciding whether to upgrade. The cost of getting it wrong is paid in broken downstream builds, surprise outages at upgrade time, and the slow erosion of trust that the version number means anything.
+
+Without disciplined versioning:
+
+- Consumers cannot pin safely; every upgrade is a roulette wheel.
+- Breaking changes hide in patch releases and detonate at the worst times.
+- Deprecations surprise consumers in production because nothing was announced.
+- Internal refactors break consumers who imported "obvious internals."
+- Manifest drift means the published version disagrees with itself.
+- Half-automated release tooling produces opaque changelogs that consumers learn to ignore.
+
+With disciplined versioning:
+
+- Consumers know what a version bump means and can plan accordingly.
+- Breaking changes carry a major bump and a documented migration path.
+- Deprecations precede removals by at least one cycle, with named alternatives.
+- Public surface is classified; internal refactors are safe by construction.
+- Every manifest stays in lockstep with one command.
+- The changelog is a release artifact consumers actually read.
+
+## Growth examples
+
+Soft sketch; not a checklist. Where appropriate is shaped by the target's maturity.
+
+- **POC / prototype:** version field exists; the README states the project's stance (pre-release, no stability promised, or stated scheme). Awareness that consumers will need a changelog before the first external user.
+- **Growing internal tool:** versioning scheme declared; changelog populated per release with user-visible entries; first deprecation discipline (warning before removal) established; version-bump script keeps manifests in lockstep.
+- **Shared library:** public surface classified; deprecation policy documented in CONTRIBUTING; changelog follows a stated format; commit-message convention enforced; release tooling produces meaningful entries from commit messages.
+- **Production service:** versioned API contract (URL prefix or header); breaking changes go through deprecation cycle; changelog reviewed before release; release tooling is automated; manifest drift is impossible by construction.
+- **Safety-critical:** version is part of the release artifact's signed manifest; deprecation cycles are formally tracked; migration paths are tested as part of CI; changelog is reviewed and approved as a release artifact, not generated and forgotten.
 
 ## References & rationales
 
-The "why" behind the checks above, named so an agent can reason like a senior engineer:
+- **Tom Preston-Werner, Semantic Versioning 2.0.0 (semver.org).** Backs principle 1 (declare and apply the scheme). The canonical semver contract: MAJOR for incompatible, MINOR for additions, PATCH for fixes. Section 4 covers the pre-1.0 license that principle 1's ZeroVer alternative names explicitly.
+- **Olivier Lacan and contributors, Keep a Changelog (keepachangelog.com).** Backs principle 2 (changelog names user-visible changes). The canonical changelog format with six named categories and the discipline of user-facing language.
+- **Rich Hickey, "Spec-ulation" (2016).** Backs principle 3 (deprecate before removing). The social contract of versioning: accretion and relaxation are safe, breaking is not, and deprecation is the bridge between them.
+- **Andrew Hunt and David Thomas, *The Pragmatic Programmer*.** Backs principle 4 (classify the public surface). Stability and explicit versioning as design principles; the public/internal distinction as a precondition for honest evolution.
+- **Conventional Commits (conventionalcommits.org).** Backs principle 5 (automated bumps) and principle 6 (commit-message convention). The commit-driven version-bump and changelog-generation hook.
+- **Linus Torvalds, "we don't break userspace" (Linux kernel mailing list).** Backs principle 1 and principle 3. The upper bound of versioning discipline; the kernel's stability promise as the thought experiment for library maintainers deciding how strict their own contract should be.
+- **David Heinemeier Hansson, on the cost of premature 1.0; the inverse argument on permanent 0.x.** Backs principle 1 from both sides. Both premature 1.0 and permanent 0.x are failure modes of the same axis: state the stance and apply it.
 
-- **Tom Preston-Werner, semver.org (Semantic Versioning 2.0.0).** The canonical versioning contract. Use this as the foundational stance behind every check in this LP.
-- **Olivier Lacan and contributors, "Keep a Changelog" (keepachangelog.com).** The canonical changelog format with six named categories. Use this when justifying changelog-content checks.
-- **Andrew Hunt and David Thomas, *The Pragmatic Programmer*.** Stability and explicit versioning as design principles. Use this when justifying public-API stability classification.
-- **Rich Hickey, "Spec-ulation" (2016).** The social contract of versioning, accretion vs breaking. Use this when justifying deprecation policy and the cost of breaking changes.
-- **Conventional Commits (conventionalcommits.org).** The commit-driven version-bump automation hook. Use this when justifying automated version bumps and changelog generation.
-- **Linus Torvalds, "we don't break userspace" (Linux kernel mailing list).** The upper bound of versioning discipline; the kernel's stability promise as a thought experiment for library maintainers. Use this when arguing for stricter discipline on public APIs.
-- **David Heinemeier Hansson on the cost of premature 1.0.** The inverse argument applies to permanent 0.x; both are failure modes of the same axis.
+## Suggested technologies (as of 2026-04-28)
 
-Each red flag is a finding the agent emits with `severity: warn` or `severity: error` per the output schema, plus a `suggested_fix` that is concrete: name the version-bump script to introduce, the changelog category to populate, the deprecation marker to add, the stability annotation to apply, or the conventional-commits config to wire in.
+These go stale fast; the date is the "as-of." Verify currency before adopting. The principles above outlast specific tools; if a tool here is no longer maintained, the patterns transfer to its replacement.
+
+- **Versioning schemes:** Semantic Versioning 2.0.0 (semver.org), Calendar Versioning (calver.org), ZeroVer (0ver.org for the explicitly-permanent-0.x stance).
+- **Changelog formats:** Keep a Changelog (manually maintained with six categories), conventional-changelog generators (auto-derived from commit messages), towncrier (Python; per-PR snippets merged at release), changesets (JS/TS monorepos).
+- **Release automation (commit-driven):** release-please (Google), semantic-release (commitlint + plugin ecosystem), changesets (per-package versioning in monorepos).
+- **Release automation (tag-driven):** GoReleaser (Go), cargo-release (Rust), `npm version` plus a CI tag-trigger workflow.
+- **Commit-message conventions:** Conventional Commits, gitmoji, project-defined prefix conventions enforced via commitlint or a pre-commit hook.
+- **Public-surface classification:** TypeScript `@public`/`@internal` JSDoc tags via API Extractor; Python `__all__` plus underscore-prefix convention; Rust `pub(crate)` vs `pub`; Go's capitalization-as-visibility rule plus `internal/` directories.
+- **Deprecation tooling:** language-native deprecation warnings (`@deprecated` JSDoc, Python `DeprecationWarning`, Rust `#[deprecated]`); migration-tool generators where the change is mechanical (codemods, `jscodeshift`, Rust's `cargo fix --edition`).

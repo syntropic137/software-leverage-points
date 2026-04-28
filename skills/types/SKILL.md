@@ -1,90 +1,156 @@
 ---
 name: types
-description: "Use when reviewing type-system concerns: type coverage, type-as-documentation, refinement vs primitive obsession, narrow vs wide types, runtime validation at boundaries, soundness gaps"
+description: "Use when reviewing type-system concerns: type-coverage in public APIs, primitive obsession vs refinement, runtime validation at trust boundaries, soundness gaps and escape hatches, narrow vs wide types, strict-mode discipline"
 ---
 
-# Types Leverage Point
+# Types
 
-## When to Use
+## Overview
 
-- A planning agent is reviewing a plan that introduces or alters type definitions, type configuration (`tsconfig`, `mypy`, `sorbet`), or boundary-validation logic
-- A PR-review agent encounters changes to public-API signatures, domain models, or parse/validate seams
-- The orchestrator (`software-leverage-review`) fans out a subagent for types
+Types are the cheapest specification a codebase carries. Done well, the type system documents the public surface, makes illegal states unrepresentable, refines untrusted input at the boundary exactly once, and the strictness setting is uniform across the project. Done poorly, escape hatches scatter across exported signatures, primitive parameters hide which value means what, and the boundary between trusted and untrusted data is invisible.
 
-## When NOT to Use
+**Core principle:** Types document intent and constrain illegal states. Validate untrusted data at the boundary, refine it into typed shapes, and let downstream code assume the invariants hold.
 
-- For language or type-system selection at the project level: that is the `architecture` LP
-- For runtime input validation as a security concern (injection, authz, input fuzzing): that is the `security` LP. This LP cares about types as a soundness and documentation surface; the two LPs cross-reference at the validation boundary.
+## Core Principles
 
-## Input
+### 1. Strict mode is uniform across the project (scope: typed-language projects)
 
-`target`: a file path, directory, plan document, or git diff to review.
+This principle scopes to projects in typed languages (TypeScript, Python with a type checker, Sorbet-on-Ruby, Kotlin, Rust, Go, etc.). When the scope applies: a single declared strictness level applies project-wide, enforced in CI, with named and dated exceptions when relaxed for a single file.
 
-## Workflow
+**Multiple valid strictness ladders exist:** off, soft (warn but do not block), strict (block on errors), pedantic (every optional check on). The principle is: state the level, apply it uniformly, document any per-file relaxation with a migration plan. The red flag is "strictness varies file-to-file with no plan," not "did not pick the strictest setting."
 
-1. Read the `target`.
-2. Detect type-system artifacts: `tsconfig.json`, `mypy.ini` / `pyproject.toml` `[tool.mypy]`, `sorbet`, type-only modules, parse/validate libraries (`zod`, `pydantic`, `io-ts`, `attrs`/`cattrs`), public-API signatures.
-3. Apply checks:
-   - Is type-checking enforced in CI, not just an editor convenience?
-   - Are public APIs typed precisely, with no `any`, `Object`, or implicit `unknown` left in signatures?
-   - Are domain primitives wrapped in types that encode invariants (`UserId` not `string`, `Email` not `string`)?
-   - Are sum or union types used to make illegal states unrepresentable?
-   - Is runtime data validated at the boundary (HTTP, file I/O, queue) and refined into typed shapes before crossing into domain code?
-   - Is the type system used as documentation, so types replace some doc-strings?
-4. Emit findings using the schema at `../software-leverage-review/output-schema.json` (authoritative) / `output-schema.md` (human-readable). The `software_leverage_point` field MUST be `"types"`.
+### 2. Public APIs are typed precisely; no escape hatches at the seam
 
-## Output
+Exported function signatures, class methods, and public type aliases must not include `any`, `Object`, untyped `dict`, `dynamic`, or unconstrained generics. An escape hatch on a public boundary defeats the type system for every caller transitively. Hide escape hatches behind a refined private function and expose only the typed shape.
 
-Conforms to `../software-leverage-review/output-schema.md`. The `software_leverage_point` field MUST be `"types"`.
+This principle also covers narrow-vs-wide: a public type should describe what the implementation actually returns, not a wider superset that forces every caller to handle cases the implementation never produces.
 
-## Red Flags (anti-patterns to surface as findings)
+### 3. Refine domain primitives instead of accepting raw strings and numbers
 
-- **`any`, `Object`, or `dynamic` escape hatches in public APIs.**
-  - What to flag: an exported function or method whose parameters or return type include `any`, `Object`, untyped `dict`, or an unconstrained generic.
-  - Why it matters: an escape hatch on a public boundary defeats the type system for every caller transitively. The whole point of types as a tooling layer is lost the moment a public seam returns `any`. Hide escape hatches behind a refined private function and expose only the typed shape.
-  - Cite: Dan Vanderkam, *Effective TypeScript* (2024), Items on `any`-avoidance and the "narrow your types" stance. Cite also: Anders Hejlsberg on the TypeScript design goal of types as a tooling and documentation layer.
+Signatures like `transfer(from: string, to: string, amount: number)` cannot prevent argument-swapping at the type level. Wrap domain primitives in refined types: `UserId` not `string`, `Email` not `string`, `Money` not `number`. The type system then documents intent and the compiler catches misuse.
 
-- **Domain primitives passed as raw strings or numbers (primitive obsession).**
-  - What to flag: signatures like `function transfer(from: string, to: string, amount: number)` where `from` and `to` are user IDs and `amount` is currency.
-  - Why it matters: the compiler cannot stop the caller from swapping arguments, and the type system fails to document what each value means. Wrapping them in `UserId`, `Money`, `Email` makes illegal calls fail at the type level and turns the signature into self-documenting design.
-  - Cite: Scott Wlaschin, *Domain Modeling Made Functional* (2018), on primitive obsession and refining primitives into domain types. Cite also: Yaron Minsky's "make illegal states unrepresentable" framing.
+**Multiple valid refinement styles exist:** newtype/branded type (zero-cost compile-time tag), nominal class (runtime construction with validation), opaque type alias (language-specific). The principle is: pick a style and apply it consistently to domain primitives. The red flag is "domain primitives passed raw," not "did not use newtype specifically."
 
-- **Optional chains where a refinement type would prevent the optional.**
-  - What to flag: `user?.profile?.email?.toLowerCase()` chains, or repeated null-checks on the same field, where the type could be narrowed to `User & { profile: Profile & { email: Email } }` after an early validation.
-  - Why it matters: optional-chasing pushes invariant checks into every caller instead of holding them at one boundary. A refinement type lifts the check once and lets every downstream caller assume the invariant holds.
-  - Cite: Hillel Wayne and the formal-methods crowd on refinement types and the spectrum from types to specs.
+### 4. Make illegal states unrepresentable with sum types
 
-- **Untyped JSON crossing boundaries without parse/validate.**
-  - What to flag: `JSON.parse(body)` or `request.json()` whose result flows into domain code without a `zod.parse`, `pydantic.parse_obj`, or equivalent validator.
-  - Why it matters: untyped JSON at a boundary is a category error that masquerades as type-correct because the compiler trusts the unsound `any` it received. The boundary is where parse-then-trust replaces validate-on-every-use.
-  - Cite: Alexis King, "Parse, don't validate" (2019), on refining unstructured input into a typed shape exactly once at the boundary.
+Boolean flags and sentinel values that mutually exclude each other (`isLoading + data + error` triplet, where only one is meaningful at a time) are a category error: the type permits states the domain forbids. Sum types (discriminated unions, sealed traits, enums-with-data) replace the impossible-but-typeable with the typeable-only-when-valid.
 
-- **Type assertions (`as Foo`, `cast(Foo, x)`) without a runtime check.**
-  - What to flag: `value as User`, `cast(User, payload)`, `# type: ignore`, or `@ts-expect-error` used to silence a type error rather than refine the value.
-  - Why it matters: an unchecked assertion is a lie to the compiler that becomes a runtime crash on the first counterexample, and the lie is invisible at the call site. If a refinement is genuinely needed, pair the assertion with a runtime check that justifies it.
-  - Cite: Boris Cherny, *Programming TypeScript* (2019), on the cost of type assertions and the type-narrowing patterns that replace them.
+### 5. Runtime validation at trust boundaries (scope: any system crossing trust boundaries)
 
-- **Type-checker config relaxed for one file at a time without justification.**
-  - What to flag: `// @ts-nocheck`, per-file `mypy: ignore`, or `tsconfig` overrides that disable strictness for one path with no comment naming the migration plan.
-  - Why it matters: a per-file relaxation is a debt marker that compounds silently; without a deadline or migration plan it stays forever and licenses the next file to do the same. Strict-by-default with named exceptions is the only stable equilibrium.
-  - Cite: Phil Wadler on type theory and parametricity, framing why uniform strictness is what makes types reasoning tools rather than annotations.
+This principle scopes to any system that ingests data from outside its own trust boundary: HTTP requests, file I/O, message queues, database reads of untrusted shape, foreign-function-interface calls. When the scope applies: untrusted data is parsed and validated exactly once at the boundary, refined into a typed shape, and downstream code assumes the invariants hold.
 
-- **Public API typed less precisely than its implementation.**
-  - What to flag: an exported function returning `Result | null` while the body always returns a `Result`, or accepting `string` while the body only handles two literal values.
-  - Why it matters: imprecise public types invite imprecise callers and force every caller to handle cases the implementation never produces. John Ousterhout's "deep modules" and "code as documentation" argue the interface should narrow toward the truth, not widen toward laziness.
-  - Cite: John Ousterhout, *A Philosophy of Software Design* (chapter 12), on code as documentation and the cost of imprecise interfaces.
+`JSON.parse(body)` flowing into domain code without a runtime validator is a soundness lie: the compiler trusts the unsound `any` it received. Parse, don't validate-on-every-use.
+
+Cross-reference: the `security` lens covers input validation as an attack-surface concern; this lens covers the same boundary as a soundness concern. Both checks apply at the same seam.
+
+### 6. Type assertions require a runtime check
+
+`value as User`, `cast(User, payload)`, `# type: ignore`, or `@ts-expect-error` used to silence a type error rather than refine the value is a lie to the compiler that becomes a runtime crash on the first counterexample. If a refinement is genuinely needed, pair the assertion with a runtime check that justifies it.
+
+### 7. Per-file strictness relaxations carry a migration plan
+
+`// @ts-nocheck`, per-file `mypy: ignore`, or `tsconfig` overrides that disable strictness for one path must include a comment naming the migration plan and a target date. A per-file relaxation without a plan is a debt marker that compounds silently and licenses the next file to do the same.
+
+## Red Flags - STOP
+
+- Strictness setting varies file-to-file or directory-to-directory with no stated migration plan
+- `any`, `Object`, `dynamic`, untyped `dict`, or unconstrained generics in exported signatures
+- Public type wider than what the implementation returns (e.g., `Result | null` when the body always returns `Result`)
+- Domain primitives passed as raw strings or numbers in signatures where mistakes would be silent (user IDs, currency, email addresses)
+- Boolean flag triplets or sentinel values where a sum type would make the illegal combinations unrepresentable
+- Untyped JSON, request bodies, or queue messages flowing into domain code without a runtime validator
+- Type assertions or `# type: ignore` used to silence the compiler with no paired runtime check or migration comment
+- Optional-chaining cascades (`user?.profile?.email?.toLowerCase()`) where one boundary refinement would lift the invariant once
+- Type-checker not enforced in CI; type errors are an editor convenience only
+
+## Rationalization Prevention
+
+| Excuse | Reality |
+|---|---|
+| "We can fix the `any` later" | Each `any` on a public seam infects every caller; the cleanup grows faster than the codebase |
+| "We trust this JSON, it comes from our own service" | Until the schema drifts on one side and the type system silently corroborates the lie |
+| "The cast is fine, I checked the value upstream" | The cast outlives the upstream check; pair them or refine instead |
+| "Strict mode has too many false positives" | Tune the rules or scope the relaxation; uniform strictness is the only stable equilibrium |
+| "Refinement types are over-engineering" | Until the third bug from a swapped string argument that a `UserId` newtype would have caught |
+| "0.x means we can change types freely" | Callers pinned on the contract still break; the cost just hides behind the version |
+| "Per-file `@ts-nocheck` is temporary" | Without a date and an owner, "temporary" means forever |
+
+## Key Patterns
+
+```
+✅ function transfer(from: UserId, to: UserId, amount: Money): TransferReceipt
+❌ function transfer(from: string, to: string, amount: number): any
+```
+
+```
+✅ const body = UserSchema.parse(await req.json())  (refined at boundary)
+❌ const body = await req.json() as User             (lie to the compiler)
+```
+
+```
+✅ type Request = { kind: "loading" } | { kind: "ok", data: T } | { kind: "error", error: E }
+❌ type Request = { isLoading: boolean, data: T | null, error: E | null }
+```
+
+```
+✅ Strict mode on, project-wide, enforced in CI; relaxations carry a migration comment
+❌ Strict mode on for new code; old code untouched; no plan to converge
+```
+
+```
+✅ Public type: function getUser(id: UserId): User
+❌ Public type: function getUser(id: UserId): User | null  (when the body never returns null)
+```
+
+## Why This Matters
+
+Types are the specification the compiler can check on every build. The cost of skipping them is paid in runtime crashes, primitive-confusion bugs, and the slow erosion of confidence that the type signatures describe the truth.
+
+Without disciplined typing:
+
+- Public APIs ship with `any` escape hatches that infect every caller.
+- Primitive-obsession bugs swap user IDs, currencies, and emails silently.
+- Untyped JSON crosses the boundary and pretends to be valid.
+- Type assertions accumulate as runtime time bombs.
+- Strict mode is on for new code and a no-go zone for old code.
+
+With disciplined typing:
+
+- Public APIs document intent and constrain misuse at compile time.
+- Domain primitives carry their meaning in their type.
+- The boundary between trusted and untrusted data is one explicit refinement.
+- Sum types make illegal states unrepresentable.
+- The strictness level is uniform; relaxations are dated and tracked.
+
+## Growth examples
+
+Soft sketch; not a checklist. Where appropriate is shaped by the target's maturity.
+
+- **POC / prototype:** types are present where they cost nothing; obvious primitive obsession is avoided on the few public seams. Awareness that boundary validation will be needed when the system ingests untrusted data.
+- **Growing internal tool:** type checker enforced in CI; public APIs typed precisely; domain primitives wrapped where the cost of confusion is real. First boundary validators appear at HTTP and queue ingress.
+- **Shared library:** public surface fully typed; no `any` exported; sum types model the public protocol; per-file strictness relaxations carry migration plans. Library consumers can rely on the type signatures as documentation.
+- **Production service:** strict mode uniform; boundary validators on every untrusted ingress; refined domain types throughout the model layer; sum types replace flag triplets in core domain logic; type errors block merge in CI.
+- **Safety-critical:** refinement types or formal-verification adjacent typing for invariants that resist enumeration; type-level state machines for protocol correctness; soundness gaps documented and reviewed; type signatures are part of the release artifact.
 
 ## References & rationales
 
-The "why" behind the checks above, named so an agent can reason like a senior engineer:
+- **Anders Hejlsberg, on TypeScript design.** Backs principle 1 (strict mode uniform). Types as a tooling-and-documentation layer; uniform strictness is what makes them reasoning tools, not annotations.
+- **Dan Vanderkam, *Effective TypeScript* (2024); Boris Cherny, *Programming TypeScript* (2019).** Back principle 2 (no escape hatches in public APIs) and principle 6 (assertions need runtime checks). Working-language-level guidance on `any`-avoidance and the cost of unchecked casts.
+- **Scott Wlaschin, *Domain Modeling Made Functional* (2018).** Backs principle 3 (refine domain primitives) and principle 4 (sum types for illegal states). The canonical functional-programming framing of domain modeling through types.
+- **Yaron Minsky, "Make Illegal States Unrepresentable" (Jane Street).** Backs principle 4. The OCaml-flavored framing of using sum types to forbid the impossible-but-typeable.
+- **Alexis King, "Parse, Don't Validate" (2019).** Backs principle 5 (runtime validation at boundaries). Refine unstructured input into a typed shape exactly once at the boundary, then trust the type.
+- **Hillel Wayne and the formal-methods community on refinement types.** Backs principle 5. The spectrum from types to specs; refinement types as the cheapest place on that spectrum.
+- **John Ousterhout, *A Philosophy of Software Design* (chapter 12).** Backs principle 2 (narrow types over wide ones). Code as documentation; the interface should narrow toward the truth.
+- **Phil Wadler on type theory and parametricity.** Backs principle 7 (uniform strictness with documented exceptions). Why uniform strictness makes types reasoning tools rather than decoration.
 
-- **Anders Hejlsberg on TypeScript design.** Types as a tooling-and-documentation layer, not just type safety. Use this when justifying why public-API precision pays off in editor tooling and reading speed.
-- **Scott Wlaschin, *Domain Modeling Made Functional* (2018).** Sum types and refinement to make illegal states unrepresentable. Use this when justifying domain primitives and union-typed states.
-- **Yaron Minsky, "make illegal states unrepresentable" (Jane Street).** The OCaml-flavored framing of the same principle. Use this when arguing for sum types over boolean flags.
-- **John Ousterhout, *A Philosophy of Software Design* (chapter 12).** Code as documentation and the cost of imprecise interfaces. Use this when justifying narrow types over wide ones.
-- **Dan Vanderkam, *Effective TypeScript* (2024) and Boris Cherny, *Programming TypeScript* (2019).** Working-language-level guidance on `any`-avoidance, narrow types, and assertion costs.
-- **Phil Wadler on type theory and parametricity.** Why uniform strictness makes types into reasoning tools. Use this when justifying strict-by-default config.
-- **Hillel Wayne and the formal-methods crowd on refinement types.** The spectrum from types to specs. Use this when justifying boundary-validation that refines untyped data into typed shapes.
-- **Alexis King, "Parse, don't validate" (2019).** Refine unstructured input into a typed shape exactly once. Use this when flagging untyped JSON crossing a boundary.
+## Suggested technologies (as of 2026-04-28)
 
-Each red flag is a finding the agent emits with `severity: warn` or `severity: error` per the output schema, plus a `suggested_fix` that is concrete: name the typed wrapper to introduce, the boundary parser to add, the assertion to replace with a refinement, or the strict-mode flag to flip.
+These go stale fast; the date is the "as-of." Verify currency before adopting. The principles above outlast specific tools; if a tool here is no longer maintained, the patterns transfer to its replacement.
+
+- **TypeScript:** `strict: true` in `tsconfig`; `zod`, `valibot`, or `io-ts` for boundary parsing; branded-type pattern for refinement; `ts-pattern` for sum-type matching.
+- **Python:** mypy or Pyright in strict mode; Pydantic v2 or attrs+cattrs for boundary parsing; `NewType` for refinement; `match` statements with sum types via `dataclass` plus `Literal` discriminators.
+- **Ruby:** Sorbet for gradual typing; runtime checks at boundaries via `T.let`/`T.cast`; `T::Struct` for refined records.
+- **Rust:** the standard library's newtype pattern; `serde` for boundary parsing; the type system covers most of the discipline natively.
+- **Go:** named types over primitives for refinement; explicit unmarshaling at boundaries; struct-tag validation libraries (`go-playground/validator`).
+- **Kotlin / Scala:** sealed classes / sealed interfaces for sum types; value classes for newtype; kotlinx.serialization or circe for boundary parsing.
+- **Cross-language:** JSON Schema or OpenAPI as the source-of-truth for boundary contracts; codegen typed clients from the schema where the toolchain supports it.
