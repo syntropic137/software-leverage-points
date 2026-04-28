@@ -43,7 +43,7 @@ Workflow files run arbitrary steps with access to secrets and the right to publi
 
 ### 7. Build artifacts carry provenance (scope: high-stakes pipelines)
 
-This principle scopes to pipelines that produce externally distributed binaries, container images, or anything that runs with privilege. When the scope applies: emit provenance attestation, sign artifacts, and produce an SBOM. The chain from commit to artifact must be answerable downstream. For internal-only tooling at low stakes, the principle is "be aware the trust assumption exists"; for high-stakes pipelines, provenance is required.
+This principle scopes to pipelines that produce externally distributed binaries, container images, or anything that runs with privilege. When the scope applies: emit provenance attestation, sign artifacts, and produce an SBOM. The chain from commit to artifact must be answerable downstream. For internal-only tooling at low stakes, the principle is "be aware the trust assumption exists"; for high-stakes pipelines, provenance is required. Cross-reference: the `continuous-deployment` lens carries the build-once-promote-everywhere stance that consumes the artifact CI emits here.
 
 ### 8. Workflow tool choice is consistent within a project
 

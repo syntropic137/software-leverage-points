@@ -33,7 +33,7 @@ A `print` (or `console.log`, `fmt.Println`, `System.out.println`) is a logger th
 
 Passwords, tokens, API keys, full request bodies, full headers (especially `Authorization`), and full SQL with bound parameters must be redacted before they reach the logger. Logs are often shipped to systems with weaker access control than the primary store; what you log is what you have leaked.
 
-Redact at the boundary, not at the sink: by the time a sink redacts, copies have already been written.
+Redact at the boundary, not at the sink: by the time a sink redacts, copies have already been written. Cross-reference: the `security` lens carries the sensitive-data classification and exfiltration-channel framing that names which fields require redaction here.
 
 ### 5. Correlation IDs propagate across hops (scope: distributed systems)
 
@@ -73,6 +73,8 @@ A log line is cheap to emit and expensive in aggregate. The discipline is to log
 - `trace` (when present): per-call detail for development. Never enabled in production.
 
 The level policy named in principle 2 makes these definitions enforceable; this principle states the content discipline that makes the policy useful.
+
+Cross-reference: the `continuous-deployment` lens consumes these boundary emissions as the health and SLO signals that gate deploys and trigger automated rollback.
 
 ## Red Flags - STOP
 

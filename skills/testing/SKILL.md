@@ -41,6 +41,8 @@ Unit tests should be:
 
 Integration and end-to-end tests inherit Independent, Repeatable, and Self-validating. Fast and Timely apply less strictly: integration tests deliberately accept some setup cost in exchange for verifying real boundaries, and E2E tests are written after the integration surface stabilizes.
 
+Cross-reference: the `continuous-integration` lens carries the pre-merge gate, sub-10-minute feedback budget, and flake-quarantine policy that turn a maintained test suite into the always-green invariant downstream practices ride on.
+
 ### 4. Test-driven development (when feasible)
 
 Three laws (Robert C. Martin's formulation of Beck's discipline):

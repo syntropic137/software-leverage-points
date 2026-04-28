@@ -15,7 +15,7 @@ Configuration is the seam between the same code artifact and every environment i
 
 ### 1. Centralize configuration in a typed object
 
-Direct env-var reads (`os.environ["X"]` or equivalent) scattered through business logic and request handlers defeat type-checking, default handling, and enumeration. A single typed config object is the canonical fix and the foundation every other principle in this lens rests on. A contributor should be able to answer "what configuration does this service need" by reading one file, not by grepping the codebase.
+Direct env-var reads (`os.environ["X"]` or equivalent) scattered through business logic and request handlers defeat type-checking, default handling, and enumeration. A single typed config object is the canonical fix and the foundation every other principle in this lens rests on. A contributor should be able to answer "what configuration does this service need" by reading one file, not by grepping the codebase. Cross-reference: the `dry` lens carries the don't-duplicate-the-value-across-files check that complements the typed-config principle this lens carries.
 
 ### 2. Document the schema as a committed artifact
 
@@ -46,6 +46,8 @@ Timeouts, retry counts, batch sizes, rate limits, and feature toggles that plaus
 When two or more configuration sources combine (defaults, files, environment, CLI flags), the order of precedence is documented and applied in one place by the typed config object. Implicit precedence means a contributor changes a value in the obvious place and nothing happens because a different source overrides it silently.
 
 **Multiple valid precedence chains exist:** defaults-then-file-then-env-then-CLI is conventional; other orderings are defensible. The principle is: state the chain and apply it consistently. The red flag is "no stated precedence," not "did not pick the canonical chain."
+
+Cross-reference: the `environments` lens carries the per-environment parity stance for the loader itself: dev, staging, and production may bind different sources, but the variable names, shape, and precedence chain stay uniform across them.
 
 ## Red Flags - STOP
 

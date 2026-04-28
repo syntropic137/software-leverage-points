@@ -17,7 +17,7 @@ Security is the lens that asks who can reach this code, with what input, and wha
 
 API keys, tokens, private keys, passwords, and connection strings with embedded credentials never live in tracked files, including `.env` files that fail to make it into `.gitignore`. A secret in git history is compromised the moment the repo is read; rotation is the only remediation, and scanners harvest public hosting continuously.
 
-**Multiple valid secret stores exist:** centralized secret manager, cloud-provider native, envelope-encrypted files. The principle is: secrets live in a managed store, not in source. The red flag is "secret in source," not "did not use a particular vendor." See the `configuration` lens for how secrets and non-secrets share (or do not share) a namespace.
+**Multiple valid secret stores exist:** centralized secret manager, cloud-provider native, envelope-encrypted files. The principle is: secrets live in a managed store, not in source. The red flag is "secret in source," not "did not use a particular vendor." See the `configuration` lens for how secrets and non-secrets share (or do not share) a namespace. Cross-reference: the `continuous-deployment` lens carries the deploy-time credential-scoping and rotation stance that consumes these stored secrets at release time.
 
 ### 2. Static analysis runs in CI (scope: projects with CI)
 
@@ -140,6 +140,12 @@ With disciplined security practice:
 - Authorization is centralized; adding an endpoint inherits the check by default.
 - CVE gates surface vulnerabilities on their patch timetable, not the attacker's.
 - Threat-model artifacts make the security posture reviewable before code lands.
+
+Cross-reference: the `environments` lens carries the per-environment parity discipline that keeps the secret-loader and trust boundary uniform across dev, staging, and production so security posture does not silently weaken in one tier.
+
+Cross-reference: the `error-handling` lens carries the "messages are a contract" framing this lens pairs with at the error boundary; together they ensure error responses neither echo unsanitized input nor leak internals.
+
+Cross-reference: the `types` lens carries the soundness side of boundary validation, refining untrusted input into a typed shape exactly once at the same seam this lens guards as an attack surface.
 
 ## Growth examples
 

@@ -31,13 +31,13 @@ This principle scopes to dependencies pulled from a git URL, a tarball URL, or a
 
 ### 4. Track maintenance signals on direct dependencies
 
-A direct dependency whose upstream has had no release in two years, is archived, has a single maintainer who has gone silent, or whose homepage 404s is a CVE incubator and a future incident. Trust shifts in projects whose maintenance signals have already degraded; the historical record is consistent on this point.
+A direct dependency whose upstream has had no release in two years, is archived, has a single maintainer who has gone silent, or whose homepage 404s is a CVE incubator and a future incident. Trust shifts in projects whose maintenance signals have already degraded; the historical record is consistent on this point. Cross-reference: the `purpose-and-scope` lens carries the upstream check on whether the dependency belongs in the project at all, which precedes the maintenance-signal check this lens carries.
 
 ### 5. Audit the transitive surface in CI
 
 The bulk of vulnerabilities reachable from an application live in transitive dependencies the team never directly chose. A CI step that scans the resolved tree against an advisory database is non-negotiable for any project past the prototype stage. Without an audit gate, vulnerabilities accumulate silently between scans.
 
-This principle scopes to projects with CI; cross-reference the `security` lens for the runtime-CVE side of the same gate.
+This principle scopes to projects with CI; cross-reference the `security` lens for the runtime-CVE side of the same gate, and the `continuous-integration` lens for the gate-enforcement and pinned-action discipline that makes this audit step a reviewed and trustworthy step of the pipeline.
 
 ### 6. One version per dependency in a workspace (scope: monorepos)
 
