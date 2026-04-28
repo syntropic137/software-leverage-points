@@ -17,8 +17,26 @@ You are a subagent dispatched by `skill-builder`. Generate ONE repo-specific (L2
    - Frontmatter: `name: <SOFTWARE_LEVERAGE_POINT>`, `description: Use when reviewing <software-leverage-point> concerns in <repo-name>`
    - First content line: `> **Generic principles:** see L1 meta-skill at <L1_SKILL_PATH>`
    - `## Repo Context` section with concrete facts inspected from the repo
-   - `## Repo-Specific Checks` section with checks tailored to the inspected stack
-   - `## Workflow` that references repo checks first, falls back to L1 for principles, emits findings per L1's output schema
+   - `## Maturity Assessment` section (see template below). Sense the target's stage from signals (CI presence, contributor count, deploy cadence, public consumers, release tags, language/toolchain).
+   - `## Growth Direction` section (see template below). Frame the natural next step for THIS lens at the current maturity stage.
+   - `## Repo-Specific Checks` section with checks tailored to the inspected stack, **calibrated to the maturity assessment above**: next-step checks surface as `info`, current-level hygiene gaps as `warn`, current-level production blockers as `error`.
+   - `## Workflow` that references repo checks first, falls back to L1 for principles, emits findings per L1's output schema.
+
+The two new sections MUST be emitted verbatim (with the assessed values filled in) between `## Repo Context` and `## Repo-Specific Checks`:
+
+```markdown
+## Maturity Assessment
+
+- **Current level:** (POC / growing / stable / legacy / safety-critical)
+- **Signals:** (specific facts the assessment is based on, e.g., "no CI, single contributor, deployed only to local dev")
+- **Last reviewed:** YYYY-MM-DD
+
+## Growth Direction
+
+- **Natural next step for this lens:** (e.g., "introduce structured logging library; current `print()` is fine for POC scope")
+- **Trigger that would force the step:** (e.g., "first incident where log noise hides the cause")
+- **Don't bother yet:** (things that would be premature at this maturity)
+```
 
 ## Output
 
