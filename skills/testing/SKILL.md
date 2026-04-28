@@ -40,3 +40,15 @@ Conforms to `../software-leverage-review/output-schema.md`. The `software_levera
 - Mocked database in integration tests when a real one is feasible
 - Test files exist but never invoked in CI
 - Coverage configured but no enforcement threshold
+
+## References & rationales
+
+The "why" behind the checks above:
+
+- **Test framework presence:** without a declared framework, every contributor reinvents test discovery and runner config. Cite: pytest's "framework as convention" model.
+- **Tests mirror source layout:** discoverability. When `src/auth/login.py` has its tests at `tests/auth/test_login.py`, navigation is mechanical. Cite: pytest convention; Kent Beck (TDD) on test locality.
+- **Coverage with enforcement threshold:** coverage measured but not gated drifts down silently. Cite: Martin Fowler on coverage as feedback, not goal; Kent Beck on tests as design pressure.
+- **Mocked DB in integration tests:** mocks let bugs hide. The whole point of integration tests is the integration boundary. Cite: Vladimir Khorikov, *Unit Testing: Principles, Practices, and Patterns* (chapter on classical vs London-school TDD; argues integration tests should hit real collaborators where feasible). Cite: J.B. Rainsberger on "integrated tests are a scam" applies to the inverse: when you call a thing an integration test, integrate.
+- **Tests not invoked in CI:** dead test files give false confidence. Cite: Continuous Integration discipline (Fowler).
+
+Each red flag is a finding the agent emits with `severity: warn` or `severity: error` per the output schema, plus a `suggested_fix` that is concrete (name the framework, the test path, the CI step).
