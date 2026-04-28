@@ -4,6 +4,8 @@ The complete list of skills shipped by this plugin. For the mental model and rat
 
 ## Operator skills
 
+Operator skills are excluded from the default `software-leverage-review` fan-out.
+
 | Skill | Status | Purpose |
 |---|---|---|
 | `software-leverage-review` | shipped (v0.1) | Orchestrator: fans out subagents per leverage point, synthesizes findings using lens references |

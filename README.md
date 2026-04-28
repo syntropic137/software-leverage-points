@@ -24,7 +24,7 @@ This plugin has been developed against `obra/superpowers` at HEAD as of 2026-04-
 
 ## Status
 
-v0.1.0 (alpha). 18 leverage-point skills shipped, 3 operator skills (`software-leverage-review`, `skill-builder`, `skill-auditor`), 3 lens reference docs. Three evals run with scores trending upward (10/12, 11/12, 12/12) as the citation discipline and lens coverage matured. See `MIGRATION.md` for the migration plan and `docs/evals/` for evidence.
+v0.1.0 (alpha). 18 leverage-point skills shipped, 3 operator skills (`software-leverage-review`, `skill-builder`, `skill-auditor`), 3 lens reference docs. Four evals run: the three orchestrator runs scored upward on the 12-point rubric (10/12, 11/12, 12/12), and eval-004 is a single-skill `skill-auditor` self-audit (Specificity 3/3; the other rubric dimensions do not apply to a single-skill run). See `MIGRATION.md` for the migration plan and `docs/evals/` for evidence.
 
 ## Install
 
