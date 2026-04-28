@@ -15,6 +15,7 @@ description: Use when reviewing logging concerns: structured-vs-unstructured log
 
 - For metrics/tracing instrumentation that does not pass through the log pipeline (closer to a `metrics` or `tracing` LP, when those ship)
 - For log analysis or incident triage on existing log data (a runtime concern, not a code-review concern)
+- For one-off `console.warn` calls in CLI tools where production observability is not a goal (the logging LP focuses on systems where logs feed downstream observability infrastructure; for CLI ergonomics use the `developer-experience` LP)
 
 ## Input
 

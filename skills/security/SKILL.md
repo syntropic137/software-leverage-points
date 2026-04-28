@@ -69,6 +69,16 @@ Conforms to `../software-leverage-review/output-schema.md`. The `software_levera
   - Why it matters: the Equifax 2017 breach (CVE-2017-5638, Apache Struts) is the textbook lesson: a patch had been available for two months, the CVE was cataloged, and no automated gate caught the unpatched build. The runtime cost was 147 million records.
   - Cite: the 2017 Equifax breach (CVE-2017-5638, Apache Struts). Cite also: OWASP Top 10 (2021), A06 (Vulnerable and Outdated Components). See the `dependencies` LP for the supply-chain side of the same gate.
 
+- **Outbound HTTP requests built from user-controlled input without an allowlist (host, scheme, IP class), SSRF (OWASP A10:2021).**
+  - What to flag: a fetch/HTTP-client call whose URL, host, or path is derived from request input, remote content, or a redirect target, with no allowlist on host or scheme and no block on internal IP ranges.
+  - Why it matters: the server can be coerced into reaching internal services (cloud metadata endpoints, internal admin APIs) or attacker-controlled hosts. The 2019 Capital One breach is the canonical incident: an SSRF reached the EC2 instance metadata service and exfiltrated credentials for an S3 bucket holding 100M+ records.
+  - Cite: OWASP Top 10 (2021), A10 (Server-Side Request Forgery). Cite also: the 2019 Capital One breach.
+
+- **Hand-rolled escape/quoting functions for YAML/JSON/SQL/HTML/shell injection points.**
+  - What to flag: an in-repo `escapeYaml`, `escapeJson`, `escapeSql`, `escapeHtml`, or `escapeShell` helper with bespoke quoting logic, used at an injection boundary.
+  - Why it matters: escape functions encode the assumption that the author understands every edge case the target format admits. YAML (block vs flow scalar quoting, anchors, tags) and shell (word splitting, glob, history expansion) are particularly hostile. Use a parser/serializer library that round-trips through the format's grammar.
+  - Cite: Michal Zalewski, *The Tangled Web*, on the failure of context-blind escaping. Cite also: Chris Anley, "Advanced SQL Injection in SQL Server Applications" (2002), the foundational example.
+
 - **Missing threat-model artifact for high-stakes changes.**
   - What to flag: a plan or PR that introduces a new external interface, a new auth flow, a new data classification, or a new third-party integration, with no STRIDE-style or attack-tree analysis attached.
   - Why it matters: security decisions made implicitly are security decisions that nobody owns. Threat modeling at design time is the cheapest place to discover that the proposed authentication is replayable, that the new endpoint is missing rate limiting, or that the integration leaks tenant identifiers.
@@ -84,6 +94,9 @@ The "why" behind the checks above, named so an agent can reason like a senior en
 - **Adam Shostack, *Threat Modeling: Designing for Security* (2014).** STRIDE, the four-question framework ("what are we working on, what can go wrong, what are we going to do about it, did we do a good job"), and trust-boundary analysis. Use this when justifying threat-model artifacts and centralized decision points.
 - **Michal Zalewski, *The Tangled Web* (2011).** Browser-side threat surface; same-origin policy, content sniffing, the long history of escaping mistakes. Use this when justifying escaping and CSP discipline.
 - **The 2017 Equifax breach (CVE-2017-5638, Apache Struts).** The canonical "patch dependency CVEs" lesson: a known, cataloged, two-months-old vulnerability went unpatched. Use this when justifying CVE gates and patch SLAs.
+- **The 2019 Capital One breach.** The canonical SSRF incident: a server-side request reached the EC2 instance-metadata endpoint and exfiltrated IAM credentials, leading to 100M+ record disclosure. Use this when justifying SSRF allowlists and metadata-endpoint blocks.
+- **Server-Side Request Forgery (SSRF):** when an outbound request URL is influenced by user input or remote content, the server can be coerced into reaching internal services or untrusted hosts. Cite: OWASP Top 10 2021 A10 (SSRF); the 2019 Capital One breach for the canonical motivating incident.
+- **Hand-rolled escapes:** escape functions encode the assumption that you understand every edge case the target format admits. YAML and shell are particularly hostile to this. Cite: Michal Zalewski, *The Tangled Web* (chapter on the failure of context-blind escaping); Chris Anley's SQL injection paper for the foundational example.
 - **NIST SP 800-53 control catalog.** The controls catalog for high-stakes contexts (AU-9 audit protection, SI-11 error handling, PL-8 security architectures). Use this when the target operates under a compliance regime that requires named control mappings.
 
 Each red flag is a finding the agent emits with `severity: warn` or `severity: error` per the output schema, plus a `suggested_fix` that is concrete: name the secret to rotate and the manager to move it into, the SAST tool to add, the parameterization API to use, the middleware to centralize the check in, or the field to redact.

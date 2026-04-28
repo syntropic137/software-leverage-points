@@ -70,6 +70,11 @@ Conforms to `../software-leverage-review/output-schema.md`. The `software_levera
   - Why it matters: version skew inside a single deployable unit means two copies of the same library ship together, doubling the attack surface and silently changing behavior at module boundaries. Drift here also defeats license-audit and CVE tooling, which assumes one resolved version per name.
   - Cite: OWASP Top 10 for Open Source Software (2024), specifically the "known vulnerabilities" and "unmaintained software" risk categories that compound when the resolved graph holds duplicates.
 
+- **Binary lockfile committed without a human-readable equivalent (e.g., `bun.lockb` without a `bun.lock` text counterpart): drift becomes invisible in code review.**
+  - What to flag: a committed binary lockfile (`bun.lockb`, or any opaque binary resolution artifact) with no paired text-format lockfile checked in alongside it.
+  - Why it matters: binary lockfiles save bytes but make the supply chain opaque to code review. A 4-line dependency change and a 4000-line one look identical in `git diff`. Reviewers cannot tell whether a PR is bumping one patch version or quietly swapping a maintainer.
+  - Cite: Bun's own docs note (and recommend) that `bun.lockb` has a text-format counterpart (`bun.lock`) for review purposes.
+
 - **No license posture or no license audit gate.**
   - What to flag: a dependency tree with no `LICENSES.md`, no `cargo deny` / `pip-licenses` / `license-checker` invocation in CI, or a copyleft license shipped into a proprietary product without legal review.
   - Why it matters: license obligations are contractual; a GPL-licensed transitive dep in a closed-source SaaS can force disclosure or relicensing. Provenance and licensing are joined: if you cannot answer "where did this come from and under what terms," you cannot answer "are we allowed to ship it."
@@ -85,6 +90,7 @@ The "why" behind the checks above, named so an agent can reason like a senior en
 - **The 2021 ua-parser-js, 2022 colors.js, 2024 xz-utils incidents.** Reference cases for malicious-package and abandoned-package risk; each shows trust shifting in a project whose maintenance signals had already degraded. Use these when justifying maintenance-signal checks.
 - **Snyk, *State of Open Source Security* (annual reports).** Empirical data on transitive-dependency vulnerability surface; the bulk of reachable CVEs live in deps the team never directly chose. Use this when justifying transitive audit gates.
 - **OWASP Top 10 for Open Source Software (2024).** Risk categories including known vulnerabilities, unmaintained software, name confusion, and unapproved changes. Use this as the structured taxonomy when classifying findings.
+- **Opaque lockfiles:** binary lockfiles save bytes but make the supply chain opaque to code review. A 4-line dependency change in a binary lockfile and a 4000-line one look the same in `git diff`. Cite: Bun's own docs note (and recommend) that `bun.lockb` has a text-format counterpart for review purposes.
 - **Cassie Crossley, *Software Supply Chain Security* (2024).** SLSA framing, provenance, and the joined posture of integrity and licensing. Use this when justifying license-and-provenance gates as a single concern.
 
 Each red flag is a finding the agent emits with `severity: warn` or `severity: error` per the output schema, plus a `suggested_fix` that is concrete: name the lockfile to commit, the version to pin, the commit SHA to reference, the audit step to add to CI, or the dep to remove.

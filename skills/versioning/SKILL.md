@@ -15,6 +15,7 @@ description: "Use when reviewing versioning concerns: semver discipline, changel
 
 - For dependency version pinning and lockfile resolution: that is the `dependencies` LP. This LP cares about the project's own versioning contract with consumers; the two LPs cross-reference at the manifest boundary.
 - For release deployment mechanics (canaries, rollbacks, environments): that is the `continuous-deployment` LP.
+- For implicit-contract drift in PRIVATE packages or internal CLIs (Hyrum's Law applies, but the versioning LP is scoped to publicly-versioned surfaces with a stated semver/calver/etc. discipline; for private contracts, use the `architecture` LP for layer-boundary review).
 
 ## Input
 

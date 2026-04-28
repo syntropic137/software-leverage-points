@@ -44,3 +44,4 @@ Multi-vendor scaffolding patterns and structural conventions adapted from [obra/
 - `skill-builder` greenfield mode.
 - A real eval against an external project's PR diff (eval-006). (eval-005 shipped: external whole-skill target with substantive code; PR-diff target moved to eval-006.)
 - Scripted version of the auditor's checks (`scripts/audit.sh`) for CI integration: in progress (script authored; runs the cross-doc, version, link, and em-dash checks deterministically).
+- Skill quality cleanup from eval-005 lessons (Milestone 3.2): SSRF (OWASP A10) and hand-rolled-escape red flags added to `security`; opaque binary-lockfile red flag added to `dependencies`; `versioning` and `logging` `When NOT to Use` scopes refined to route private/CLI cases to the right LP.
