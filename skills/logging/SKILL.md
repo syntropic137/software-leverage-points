@@ -1,79 +1,146 @@
 ---
 name: logging
-description: Use when reviewing logging concerns: structured-vs-unstructured logs, log levels, observability boundaries, secret leakage, retention
+description: Use when reviewing logging concerns: structured-vs-unstructured logs, log-level policy, secret and PII redaction, correlation IDs in distributed systems, log/trace linkage, print statements in production code paths
 ---
 
-# Logging Leverage Point
+# Logging
 
-## When to Use
+## Overview
 
-- A planning or PR-review agent is checking logging or observability concerns
-- The orchestrator (`software-leverage-review`) fans out a subagent for logging
-- A user explicitly asks for a logging-focused or observability-focused review
+Logs are the substrate that makes production debuggable. They are also the place where secrets leak, level discipline collapses, and "we'll observe it later" becomes "we cannot answer what happened to that request." Done well, logs feed the entire observability stack; done poorly, they are noise that hides signal.
 
-## When NOT to Use
+**Core principle:** Logs are structured events written to a stream the environment routes. The application produces; the environment ships, indexes, and queries.
 
-- For metrics/tracing instrumentation that does not pass through the log pipeline (closer to a `metrics` or `tracing` LP, when those ship)
-- For log analysis or incident triage on existing log data (a runtime concern, not a code-review concern)
-- For one-off `console.warn` calls in CLI tools where production observability is not a goal (the logging LP focuses on systems where logs feed downstream observability infrastructure; for CLI ergonomics use the `developer-experience` LP)
+## Core Principles
 
-## Input
+### 1. Logs are structured events, not free-form strings
 
-`target`: a file path, directory, plan document, or git diff to review.
+A log line is a record with named fields. Free-form strings collapse the pipeline into greppable text and lose the ability to query by field, aggregate by user, or compute high-cardinality slices.
 
-## Workflow
+**Multiple valid serializations exist:** key-value pairs, JSON, logfmt. The principle is: pick one and apply it consistently at the edge (the logger boundary). The red flag is "no stated convention," not "did not pick JSON."
 
-1. Read the `target`.
-2. Detect logging artifacts: logger configuration, log calls, log level policy, redaction helpers, structured-log adapters, correlation/trace ID propagation, log-shipping config.
-3. Apply checks:
-   - Are logs structured (key-value or JSON) or free-form strings?
-   - Is there a documented log-level policy, and do call sites follow it?
-   - Are secrets and PII redacted before they reach the logger?
-   - Do logs carry correlation IDs (request ID, trace ID) in distributed contexts?
-   - Are logs tied into traces (trace ID, span ID) so a single event can be navigated across pillars?
-   - Is `print()` (or equivalent) leaking into production code paths?
-4. Emit findings using the schema at `../software-leverage-review/output-schema.md`. The `software_leverage_point` field MUST be `"logging"`.
+### 2. Log levels follow a documented policy
 
-## Output
+Levels are a deliberate filter, not decoration. Without a policy, levels lose signal value: on-call engineers stop trusting them, alerts wired to `error` go quiet or fire constantly, and `info` becomes a default that absorbs everything.
 
-Conforms to `../software-leverage-review/output-schema.md`. The `software_leverage_point` field MUST be `"logging"`.
+A level policy states: what counts as `error` (something a human must address), what counts as `warn` (something to notice), what counts as `info` (the durable narrative), what counts as `debug` (detail for active investigation).
 
-## Red Flags (anti-patterns to surface as findings)
+### 3. No `print()` in production code paths
 
-- **Unstructured logs.**
-  - What to flag: free-form strings (`logger.info("user " + id + " did " + action)`) instead of key-value or JSON (`logger.info("user_action", user_id=id, action=action)`).
-  - Why it matters: without structure the log pipeline collapses into greppable text and you lose the ability to query by field, aggregate by user, or compute high-cardinality slices.
-  - Cite: Charity Majors and Liz Fong-Jones, *Observability Engineering* (O'Reilly), on high-cardinality structured events as the foundation of observability. Cite also: Adam Wiggins on structured logging in 12-factor.
-- **`print()` (or equivalent) in production code.**
-  - What to flag: `print`, `console.log`, `fmt.Println`, or `System.out.println` in non-test code.
-  - Why it matters: a `print` is a logger that bypasses level filtering, formatting, redaction, and shipping. It writes to stdout but tells the rest of the system nothing.
-  - Cite: Twelve-Factor App, factor XI ("Logs"): the app writes event streams unbuffered to stdout via a logging interface, not ad-hoc prints, so the execution environment can route them.
-- **Log levels chosen by feel.**
-  - What to flag: everything at `info`, nothing at `debug` or `warn`, or `error` used for non-error events.
-  - Why it matters: without a documented level policy, levels lose signal value and on-call engineers stop trusting them; alerts wired to `error` then go quiet or fire constantly.
-  - Cite: Cindy Sridharan, *Distributed Systems Observability* (O'Reilly), on log levels as a deliberate filter rather than decoration.
-- **PII or secrets logged unredacted.**
-  - What to flag: passwords, tokens, API keys, full request bodies, full headers (especially `Authorization`), full SQL with bound parameters.
-  - Why it matters: a security and compliance failure independent of observability quality. Logs are often shipped to systems with weaker access control than the primary store.
-  - Cite: OWASP Top 10 A09 (Security Logging and Monitoring Failures). Cite: GDPR Article 5(1)(c), data-minimization principle: do not collect, and therefore do not log, more than is necessary.
-- **No correlation IDs in distributed systems.**
-  - What to flag: a request crosses two or more services and no shared identifier links the logs.
-  - Why it matters: without correlation you cannot answer "what happened to this request"; debugging degrades to timestamp-correlation across services.
-  - Cite: Sridharan on the three pillars; the fix is to generate a correlation ID at the edge and propagate it through every hop's MDC/context (e.g., `X-Request-ID`, `traceparent`).
-- **Logs untied to traces.**
-  - What to flag: logs and traces stored in separate systems with no shared trace ID or span ID.
-  - Why it matters: you can see a slow span or a noisy log line, but cannot pivot from one to the other.
-  - Cite: Majors and Fong-Jones on events as the substrate that unifies the pillars; trace-aware logs are the cheapest way to make that substrate real.
+A `print` (or `console.log`, `fmt.Println`, `System.out.println`) is a logger that bypasses level filtering, formatting, redaction, and shipping. It writes to stdout but tells the rest of the system nothing. Production code uses the project's logger.
+
+### 4. Redact secrets and PII at the logger boundary
+
+Passwords, tokens, API keys, full request bodies, full headers (especially `Authorization`), and full SQL with bound parameters must be redacted before they reach the logger. Logs are often shipped to systems with weaker access control than the primary store; what you log is what you have leaked.
+
+Redact at the boundary, not at the sink: by the time a sink redacts, copies have already been written.
+
+### 5. Correlation IDs propagate across hops (scope: distributed systems)
+
+This principle scopes to systems where a single user-facing request crosses two or more services. In single-process applications it does not apply.
+
+When the scope applies: generate a correlation ID at the edge (or accept one if the caller provided it) and propagate it through every hop's context. Without correlation, "what happened to this request" becomes timestamp-correlation across services, which is unreliable at any meaningful traffic level.
+
+### 6. Logs link to traces (scope: systems that emit traces)
+
+This principle scopes to systems instrumented with distributed tracing. When the scope applies: every log line emitted within a span carries the trace ID and span ID. Logs and traces stored separately with no shared identifier cannot pivot to each other; the slow span and the noisy log line are two facts that should be one.
+
+## Red Flags - STOP
+
+- Free-form string logs (`logger.info("user " + id + " did " + action)`) instead of structured (`logger.info("user_action", user_id=id, action=action)`)
+- `print`, `console.log`, `fmt.Println`, or `System.out.println` in non-test code paths
+- No documented log-level policy; everything at `info`, or `error` used for non-error events
+- Passwords, tokens, API keys, full request bodies, or `Authorization` headers logged unredacted
+- Distributed system with no correlation ID propagated across service hops
+- Logs and traces in separate systems with no shared trace ID or span ID
+- Log files written by the application to local paths instead of streamed to stdout for the environment to route
+- Redaction applied at the sink rather than the logger boundary
+
+## Rationalization Prevention
+
+| Excuse | Reality |
+|---|---|
+| "Free-form is more readable" | It is at first; then you cannot query by field and the pipeline collapses |
+| "We'll add structure later" | Later means rewriting every call site; the cost compounds |
+| "`print` is fine for this" | Production code paths are not "this"; the print escapes review when the path goes hot |
+| "Levels don't matter" | They do at 3 AM when on-call is grepping for the cause |
+| "Tokens are short-lived, logging them is fine" | Logs outlive tokens; the leak is durable |
+| "We don't need correlation, we know where the request goes" | Until a service is added, then the next debug session is timestamp-archaeology |
+| "Redaction at the sink is the same thing" | The intermediate copies are already written; redaction at the boundary is the only one that prevents leakage |
+
+## Key Patterns
+
+```
+✅ logger.info("user_action", user_id=id, action=action, request_id=ctx.request_id)
+❌ logger.info("user " + str(id) + " did " + action)
+```
+
+```
+✅ Documented level policy: error = pages someone, warn = notice, info = narrative, debug = detail
+❌ Everything at info; alerts fire on error but error is also used for client 4xx
+```
+
+```
+✅ logger.info("payment_processed", amount=amount, card_token=redact(token))
+❌ logger.info(f"Processed payment with token {token}")
+```
+
+```
+✅ Correlation ID injected at the edge, propagated via traceparent / X-Request-ID across hops
+❌ Each service logs its own request ID; no shared identifier
+```
+
+```
+✅ Log line includes trace_id and span_id from the active context
+❌ Logs in one system, traces in another, no shared identifier
+```
+
+## Why This Matters
+
+Logs are the cheapest observability primitive. They are also the one most likely to fail silently: free-form strings still "work," `print` still produces output, `error` still gets logged. The failure mode is not "logs missing"; it is "logs present but useless when needed."
+
+Without disciplined logging:
+
+- Production debugging degrades to grep and timestamp-correlation; mean time to resolution climbs.
+- Secrets leak through logs to systems with weaker access control than the primary store.
+- Alerts wired to `error` go quiet or fire constantly because levels are inconsistent.
+- The log volume grows but the signal does not; storage costs climb while debuggability does not.
+
+With disciplined logging:
+
+- Production questions are answered by log queries in seconds, not log archaeology in hours.
+- Secrets are redacted at the boundary; the leakage surface is bounded.
+- Levels are trusted; alerts fire on real signal.
+- Logs link to traces and metrics; the three pillars compose.
+
+## Growth examples
+
+Soft sketch; not a checklist. Where appropriate is shaped by the target's maturity.
+
+- **POC / prototype:** a logger object exists (not `print`); calls go through it. Structure is optional but encouraged. No level policy yet; that lands when there is something to alert on.
+- **Growing internal tool:** structured logging in place at the boundary. First level policy documented (one paragraph in the README). Secrets identified and redacted. No correlation IDs yet because the system is single-process.
+- **Shared library:** library exposes a logger interface, does not configure logging itself (that is the consuming application's job). Library never logs secrets even if passed them. Documentation states the logger contract.
+- **Production service:** structured logs, documented level policy enforced in review, redaction at the logger boundary with a tested redaction helper. Correlation IDs propagated across hops via standard headers. Logs link to traces. Log volume monitored as a cost line.
+- **Safety-critical:** audit logs separated from operational logs and retained per regulatory requirements. Tamper-evident audit trail. Redaction is part of the release artifact and reviewed. PII flow documented; logs are part of the data-flow diagram.
 
 ## References & rationales
 
-The "why" behind the checks above, named so an agent can reason like a senior engineer:
+- **Charity Majors and Liz Fong-Jones, *Observability Engineering* (O'Reilly, 2022).** Backs principles 1 (structured events) and 6 (logs as substrate that links to traces). Argues high-cardinality structured events are the foundation of debuggable production systems.
+- **Cindy Sridharan, *Distributed Systems Observability* (O'Reilly, 2018).** Backs principles 2 (level discipline as deliberate filter) and 5 (correlation IDs in distributed contexts). Three-pillars framing.
+- **Adam Wiggins, Twelve-Factor App, factor XI ("Logs").** Backs principle 3 (no `print` in production; logs are streams the environment routes). The application writes; the environment ships.
+- **OWASP Top 10 A09 (Security Logging and Monitoring Failures).** Backs principle 4 (redaction at the boundary). Pairs "log too little to investigate" with "log too much and leak secrets."
+- **GDPR Article 5(1)(c), data minimization.** Backs principle 4 from the regulatory direction. Logs are processing; do not log more PII than the purpose requires.
+- **Brendan Gregg, USE method; Tom Wilkie, RED method.** Corroborate principle 1 (structure) from the metrics direction: logs feed metrics in well-instrumented systems, so field-name discipline matters.
 
-- **Charity Majors and Liz Fong-Jones, *Observability Engineering* (O'Reilly).** The canonical argument for structured, high-cardinality event logging as the foundation of debuggable production systems. Use this when justifying structure-over-grep.
-- **Cindy Sridharan, *Distributed Systems Observability* (O'Reilly).** The three-pillars framing (logs, metrics, traces) and how they relate. Use this when justifying correlation IDs, trace linking, and level discipline.
-- **Twelve-Factor App, factor XI ("Logs"), Adam Wiggins.** Treat logs as event streams; the app writes; the environment routes. Use this when justifying "no in-app log file paths" and "no `print()` in production".
-- **Brendan Gregg, USE method; Tom Wilkie, RED method.** Logs feed metrics in well-instrumented systems. If a log line is the source of a metric, it must be structured and stable. Use this when justifying field-name discipline.
-- **OWASP Top 10 A09 (Security Logging and Monitoring Failures).** The category that pairs "log too little to investigate" with "log too much and leak secrets". Use this when justifying redaction and audit-log presence in the same review.
-- **GDPR Article 5(1)(c), data minimization.** Logs are processing. Do not log more PII than the purpose requires. Use this when justifying redaction at the boundary, not in the sink.
+## Suggested technologies (as of 2026-04-28)
 
-Each red flag is a finding the agent emits with `severity: warn` or `severity: error` per the output schema, plus a `suggested_fix` that is concrete: name the logger, name the redaction helper, point at the propagation header (e.g., `traceparent`, `X-Request-ID`), or name the level policy doc.
+These go stale fast; the date is the "as-of." Verify currency before adopting. The principles above outlast specific tools; if a tool here is no longer maintained, the patterns transfer to its replacement.
+
+- **Python:** `structlog` for structured logging; `python-json-logger` for JSON output via stdlib `logging`; `loguru` for ergonomic single-file scripts.
+- **JS/TS:** `pino` (fast JSON), `winston` (configurable transports), `bunyan` (legacy but stable).
+- **Go:** `slog` (stdlib, Go 1.21+), `zap`, `zerolog`.
+- **Rust:** `tracing` with `tracing-subscriber` for structured + spans; `log` + `env_logger` for simpler cases.
+- **Java/Kotlin:** SLF4J facade with Logback or Log4j2; MDC for correlation context.
+- **Tracing/correlation:** OpenTelemetry SDK for any stack; `traceparent` header (W3C Trace Context) as the canonical propagation format.
+- **Log aggregation/query:** Loki + Grafana, Honeycomb (events-first), Datadog, Splunk, Elastic. The choice is downstream; the principle is "logs are streams the environment routes."
+- **Redaction helpers:** project-local helpers calling out keys from a denylist; never trust regex-only redaction for high-stakes secrets.
