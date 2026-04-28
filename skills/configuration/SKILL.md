@@ -1,88 +1,156 @@
 ---
 name: configuration
-description: "Use when reviewing configuration concerns: env-var layering, defaults, validation, secret/non-secret separation, schema discoverability, twelve-factor compliance"
+description: "Use when reviewing configuration concerns: env-var layering, typed config objects, startup validation, secret/non-secret separation, schema discoverability, environment-dependent defaults, twelve-factor compliance, magic numbers"
 ---
 
-# Configuration Leverage Point
+# Configuration
 
-## When to Use
+## Overview
 
-- A planning agent is reviewing a plan that introduces new environment variables, runtime flags, or feature toggles
-- A PR-review agent encounters changes to config loaders, `.env*` files, settings classes, or default values
-- The orchestrator (`software-leverage-review`) fans out a subagent for configuration
+Configuration is the seam between the same code artifact and every environment it deploys into. Done well, configuration is a single typed surface, validated at startup, with a documented schema and explicit precedence. Done poorly, configuration is a scatter of `os.environ` reads, an unsafe default that silently ships to production, and a tribal-knowledge tax paid by every new contributor.
 
-## When NOT to Use
+**Core principle:** Configuration is one explicit, validated, discoverable surface. The application declares it; the environment binds it; startup refuses to proceed if the binding is incomplete.
 
-- For whether secrets exist in source at all: that is the `security` LP. This LP cares about how secret and non-secret config are loaded, layered, and validated. The two LPs cross-reference at the secret boundary.
-- For dependency-version pinning and lockfile health: that is the `dependencies` LP.
+## Core Principles
 
-## Input
+### 1. Centralize configuration in a typed object
 
-`target`: a file path, directory, plan document, or git diff to review.
+Direct env-var reads (`os.environ["X"]` or equivalent) scattered through business logic and request handlers defeat type-checking, default handling, and enumeration. A single typed config object is the canonical fix and the foundation every other principle in this lens rests on. A contributor should be able to answer "what configuration does this service need" by reading one file, not by grepping the codebase.
 
-## Workflow
+### 2. Document the schema as a committed artifact
 
-1. Read the `target`.
-2. Detect configuration artifacts: settings module(s), config loaders, `.env*` files, `.env.example`, JSON Schema or typed config object, secret-store integrations, startup validation hooks.
-3. Apply checks:
-   - Are configuration values loaded with explicit precedence (defaults then file then env then CLI), in one place?
-   - Are required configuration values validated at startup with helpful errors, before request handling begins?
-   - Are secrets stored separately from non-secret config (env, secrets manager) per the twelve-factor principle?
-   - Is the configuration schema discoverable as a typed config object, `.env.example`, or JSON Schema, so a new contributor can list every variable without reading code?
-   - Are configuration changes test-covered by at least a smoke test that boots the app with realistic env?
-   - Are values that vary by environment expressed as configuration, or as magic numbers in code?
-4. Emit findings using the schema at `../software-leverage-review/output-schema.json` (authoritative) / `output-schema.md` (human-readable). The `software_leverage_point` field MUST be `"configuration"`.
+A service that reads configuration at runtime must ship a discoverable schema: a committed example file, a JSON Schema, a typed config class, or a generated reference. Undocumented configuration is a tax paid one startup error at a time, and production discovers missing values under load. The example file is the cheapest possible schema and belongs in version control.
 
-## Output
+### 3. Validate required configuration at startup (scope: long-lived services)
 
-Conforms to `../software-leverage-review/output-schema.md`. The `software_leverage_point` field MUST be `"configuration"`.
+This principle scopes to services with a startup phase that precedes request handling. Long-lived services validate every required value before the first request: a misconfigured deploy must refuse to come up, not half-process traffic and crash deep in a handler. CLI tools and scripts may legitimately validate at first use; document the choice.
 
-## Red Flags (anti-patterns to surface as findings)
+Late-binding configuration failures are release-blocking surface area pretending to be runtime errors. They corrupt observability and produce partial outages.
 
-- **`os.environ["X"]` (or equivalent) scattered through code without a typed config object.**
-  - What to flag: direct env-var reads inside business logic, request handlers, or utility modules, with no central settings class or struct.
-  - Why it matters: scattered reads make the configuration surface impossible to enumerate; a contributor cannot answer "what env vars does this service need" without grepping. They also defeat type-checking and default handling, since each call site invents its own coercion. A typed config object is the canonical fix and the foundation for every other check in this LP.
-  - Cite: Pydantic Settings docs, cattrs, and similar typed-config libraries as canonical references for the typed-config pattern. Cite also: Adam Wiggins, twelve-factor design ("Config"), explicit declaration of configuration.
+### 4. Separate secrets from non-secret configuration
 
-- **No `.env.example` or schema documenting required vars.**
-  - What to flag: a service that reads env vars at runtime but ships no committed example file, JSON Schema, or generated reference listing every variable, its type, and whether it is required.
-  - Why it matters: undocumented configuration is a tribal-knowledge tax. New contributors and agents discover required vars by hitting startup errors one at a time, and the production deploy discovers missing vars under load. The example file is the cheapest possible schema and belongs in version control.
-  - Cite: The Twelve-Factor App, factor III ("Config"), strict separation of config from code, with config explicit and external.
+Secrets and tunables live in different stores. Mixing them collapses the trust boundary: a developer changing a non-secret tunable is forced through the secret-handling path, and a debugging tool that dumps non-secret config accidentally dumps secrets. The twelve-factor stance is one rule, two stores: secrets in a managed secret store, non-secrets in the environment or a tracked file.
 
-- **Required config not validated at startup; failures surface during request handling.**
-  - What to flag: a service that boots successfully with missing or malformed env vars and then throws on the first request that needs them, often deep in a handler.
-  - Why it matters: late-binding configuration failures are release-blocking surface area pretending to be runtime errors. They corrupt observability (the failure looks like a request bug, not a deploy bug), and they often half-process traffic before failing. Validate at startup so a misconfigured deploy refuses to come up.
-  - Cite: Michael Nygard, *Release It!* (2nd ed., 2018), on configuration as a release-blocking surface and the fail-fast-at-startup pattern.
+**Multiple valid secret stores exist:** centralized secret manager, cloud-provider native, envelope-encrypted files in source. The principle is: pick one and apply it consistently. The red flag is "secrets and non-secrets in the same namespace," not "did not pick a particular vendor." See the `security` lens for whether secrets exist in source at all.
 
-- **Secrets and non-secrets in the same file or env namespace.**
-  - What to flag: a `config.yaml` or `.env` mixing API keys with feature flags and tunables, with no separation of read scope.
-  - Why it matters: mixing collapses the trust boundary. A developer who needs to read or change a non-secret tunable is forced through the secret-handling path, and a tool that needs to dump non-secret config for debugging accidentally dumps secrets too. The twelve-factor stance is that secrets live in a manager (Vault, Secrets Manager) and non-secrets live in the environment or a tracked file; one rule, two stores.
-  - Cite: HashiCorp Vault and AWS Secrets Manager docs as canonical references for the secret-handling pattern. Cross-reference: see the `security` LP for whether secrets exist in source at all.
+### 5. No production-relevant defaults
 
-- **Defaults that are environment-dependent without explicit overrides.**
-  - What to flag: a default of `localhost` for a database host, `dev` for an environment name, or a permissive CORS list, with no requirement that production override it. Even worse: a default that silently changes behavior based on a detected hostname.
-  - Why it matters: an unsafe default plus a forgotten override equals an outage or a security incident. The fail-safe stance is that production-relevant values have no default, so the deploy refuses to start if the override is missing. Defaults belong to development and test, not production.
-  - Cite: Michael Nygard, *Release It!* (2nd ed., 2018), specifically the configuration-as-release-surface chapter on dangerous defaults.
+Production-relevant values have no default: the deploy refuses to start if the override is missing. Defaults belong to development and test, where a forgotten override produces a local error rather than an outage or a security incident. A default of `localhost`, `dev`, or a permissive CORS list is fail-open by construction.
 
-- **Magic numbers in code that should be configuration.**
-  - What to flag: timeouts, retry counts, batch sizes, rate limits, or feature toggles hardcoded in source where a deploy-time change would be appropriate.
-  - Why it matters: every magic number is a future incident waiting on a value change that requires a deploy. The Pragmatic Programmer's "configurability" principle is to surface knobs that operators may need to turn, but only those: configurability has a cost (more surface to validate and document) so the tradeoff is real, and the tell is whether the value has plausibly changed across environments.
-  - Cite: Andrew Hunt and David Thomas, *The Pragmatic Programmer*, on configurability as a deliberate tradeoff.
+### 6. Lift environment-varying values out of code
 
-- **No precedence rule, or the precedence rule is implicit.**
-  - What to flag: two config sources (env and file, or env and CLI) where it is unclear which wins, or where the answer depends on import order.
-  - Why it matters: implicit precedence means a contributor changes a value in the "obvious" place and nothing happens, because a different source is overriding it silently. The canonical rule is defaults then file then env then CLI, applied in one place by the typed config object.
-  - Cite: Pydantic Settings docs and similar typed-config libraries for the canonical precedence chain. Cite also: The Twelve-Factor App, factor III ("Config"), on configuration as a single explicit surface.
+Timeouts, retry counts, batch sizes, rate limits, and feature toggles that plausibly change across environments belong in configuration, not as magic numbers in source. The tell is whether the value has changed across environments before, or plausibly might. Configurability has a cost (more surface to validate and document), so the test is "does this knob need to turn at deploy time," not "could this conceivably be tuned."
+
+### 7. State the precedence chain explicitly
+
+When two or more configuration sources combine (defaults, files, environment, CLI flags), the order of precedence is documented and applied in one place by the typed config object. Implicit precedence means a contributor changes a value in the obvious place and nothing happens because a different source overrides it silently.
+
+**Multiple valid precedence chains exist:** defaults-then-file-then-env-then-CLI is conventional; other orderings are defensible. The principle is: state the chain and apply it consistently. The red flag is "no stated precedence," not "did not pick the canonical chain."
+
+## Red Flags - STOP
+
+- Direct env-var reads (`os.environ["X"]` or equivalent) scattered through business logic and handlers without a central typed config object
+- No committed `.env.example`, JSON Schema, or generated reference listing every variable, its type, and whether it is required
+- Required configuration not validated at startup; failures surface during request handling
+- Secrets and non-secret tunables share a single file or environment namespace
+- Defaults that are environment-dependent (`localhost`, `dev`, permissive CORS) without a requirement that production override them
+- Magic numbers in code (timeouts, retry counts, rate limits) where deploy-time variation is plausible
+- Two or more configuration sources combine with no stated precedence rule, or precedence depends on import order
+
+## Rationalization Prevention
+
+| Excuse | Reality |
+|---|---|
+| "It's just one env-var read inline" | Each ad-hoc read forks the configuration surface; a year later there are forty |
+| "We'll write the example file later" | Until then, every onboarding starts with a startup-error scavenger hunt |
+| "Validation at startup is over-engineering" | The alternative is partial outages where the misconfiguration looks like a request bug |
+| "Secrets in the env are fine; nobody can see it" | Logs, debug dumps, and process listings disagree |
+| "The default of localhost is harmless" | Until production deploys without the override and silently talks to itself |
+| "These constants will never change" | They change at the worst possible moment, and now it's a deploy not a config flip |
+| "Precedence is obvious from the code" | Until two sources collide and the loser is wrong silently |
+
+## Key Patterns
+
+```
+✅ Settings = TypedConfig(); from settings import settings; settings.db_url
+❌ os.environ["DB_URL"] scattered across modules
+```
+
+```
+✅ .env.example committed; every required variable listed with type and example
+❌ Required variables documented only in the startup error you hit when you forget one
+```
+
+```
+✅ App refuses to start if DATABASE_URL is missing; clear error names the variable
+❌ App starts; first DB-touching request crashes with KeyError deep in a handler
+```
+
+```
+✅ Secrets in a managed store; non-secret tunables in env or a tracked file
+❌ API keys and feature flags share .env, with no separation of read scope
+```
+
+```
+✅ No default for PRODUCTION_API_URL; deploy fails closed if missing
+❌ Default of "http://localhost:8080" silently ships to prod when override is forgotten
+```
+
+```
+✅ TIMEOUT_SECONDS = settings.timeout_seconds  (configurable)
+❌ requests.get(url, timeout=30)  (magic number; cannot tune without a deploy)
+```
+
+```
+✅ Documented chain: defaults → file → env → CLI; applied in one place
+❌ Some values read from env, some from file; precedence varies by import order
+```
+
+## Why This Matters
+
+Configuration is the surface where the same code meets every environment. The cost of getting it wrong is paid at deploy time, in incidents, and in the slow tax of every contributor who cannot tell what the service needs to run.
+
+Without disciplined configuration:
+
+- Onboarding is a scavenger hunt across grep results and startup errors.
+- Production discovers missing values under load; partial outages look like request bugs.
+- Secrets leak into debug dumps because they share a namespace with tunables.
+- Forgotten overrides plus permissive defaults produce outages and security incidents.
+- Tuning a value requires a code change and a deploy, not a config flip.
+
+With disciplined configuration:
+
+- Every variable is enumerable from a single typed surface.
+- Misconfigured deploys refuse to come up; the failure is loud and at startup.
+- Secrets and tunables are separated by construction.
+- Production-relevant values have no defaults; the deploy fails closed.
+- Operators can turn the knobs the application exposes, and only those.
+
+## Growth examples
+
+Soft sketch; not a checklist. Where appropriate is shaped by the target's maturity.
+
+- **POC / prototype:** a `.env.example` exists; configuration is read in one place even if the typed object is rudimentary. Awareness that the schema will need to be discoverable as the surface grows.
+- **Growing internal tool:** typed config object in place; required values validated at startup; `.env.example` kept current. Secrets at least separated into their own file even if not yet in a managed store.
+- **Shared library:** the library exposes its configuration as part of its public surface (a typed settings object the consuming application instantiates), does not read env-vars itself, and documents every required value.
+- **Production service:** typed config object; startup validation enforced; `.env.example` reviewed in CI; secrets in a managed store; precedence chain documented; no production-relevant defaults. Magic numbers reviewed and lifted to config when environment-varying.
+- **Safety-critical:** configuration schema is part of the release artifact; changes go through change control; secret rotation is automated; configuration drift is detected by tooling. Every required value has provenance: who set it, when, and why.
 
 ## References & rationales
 
-The "why" behind the checks above, named so an agent can reason like a senior engineer:
+- **The Twelve-Factor App, factor III ("Config"); Adam Wiggins.** Backs principles 1 (centralize), 2 (document the schema), and 7 (state the precedence chain). The foundational stance that configuration is explicit, external, and the same code artifact deploys to every environment.
+- **Michael Nygard, *Release It!* (2nd ed., 2018).** Backs principles 3 (validate at startup) and 5 (no production-relevant defaults). The chapter on dangerous defaults and configuration as a release-blocking surface is the canonical source for fail-fast-at-startup discipline.
+- **Andrew Hunt and David Thomas, *The Pragmatic Programmer*.** Backs principle 6 (lift environment-varying values out of code). Configurability as a deliberate tradeoff: surface the knobs operators need, but no more.
+- **Twelve-factor stance on secret handling.** Backs principle 4 (separate secrets from non-secrets). Cross-reference: the `security` lens carries the "secrets in source" check; this lens carries the "secrets share a namespace with tunables" check.
 
-- **The Twelve-Factor App, factor III ("Config").** Strict separation of config from code; configuration is explicit, external, and the same code artifact deploys to every environment. Use this as the foundational stance behind every check in this LP.
-- **Adam Wiggins on the twelve-factor design.** The original framing for config-as-environment and the deploy-as-environment-binding model. Use this when justifying why config is not source.
-- **Michael Nygard, *Release It!* (2nd ed., 2018).** Configuration as a release-blocking surface; fail-fast-at-startup; the chapter on dangerous defaults. Use this when justifying startup validation and the absence-of-production-defaults stance.
-- **Pydantic Settings docs, cattrs, typed-config patterns.** Canonical references for the typed-config object: precedence chains, validation, and discoverable schema. Use this when justifying centralization of env reads.
-- **HashiCorp Vault, AWS Secrets Manager docs.** Canonical references for the secret-handling pattern; secrets live in a manager, not in the env namespace alongside tunables. Use this when justifying secret/non-secret separation.
-- **Andrew Hunt and David Thomas, *The Pragmatic Programmer*.** The "configurability" principle as a deliberate tradeoff: surface the knobs operators need, but no more. Use this when justifying which values become configuration and which stay in code.
+## Suggested technologies (as of 2026-04-28)
 
-Each red flag is a finding the agent emits with `severity: warn` or `severity: error` per the output schema, plus a `suggested_fix` that is concrete: name the typed config object to introduce, the `.env.example` to commit, the startup check to add, the secret to migrate to a manager, or the magic number to lift to config.
+These go stale fast; the date is the "as-of." Verify currency before adopting. The principles above outlast specific libraries; if a tool here is no longer maintained, the patterns transfer to its replacement.
+
+- **Python:** Pydantic Settings or typed-settings for centralized typed config; cattrs for structured deserialization; `python-dotenv` for `.env` file loading in development.
+- **JS/TS:** zod or io-ts for runtime-validated schemas; convict for layered config; framework-native config (Next.js, NestJS) where the framework provides one.
+- **Go:** `viper` or `koanf` for layered config; `envconfig` for typed env-var loading.
+- **Rust:** `figment`, `config-rs`, or `envy` for layered/typed config.
+- **Java/Kotlin:** Spring Boot configuration properties; MicroProfile Config; Typesafe Config (HOCON).
+- **Secret stores:** centralized secret managers (e.g., HashiCorp Vault), cloud-provider native (AWS/GCP/Azure secret services), envelope-encrypted files (sops with age or KMS). Choice depends on deployment context; consistency within a project matters more than vendor.
+- **Schema discoverability:** committed `.env.example`; JSON Schema generated from the typed config object; `--print-config` CLI flag that emits the resolved configuration with secrets redacted.
