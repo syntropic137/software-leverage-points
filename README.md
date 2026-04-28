@@ -71,9 +71,9 @@ Targeted leverage-point set (count to be reconciled with the user, currently 14 
 | documentation | shipped (v0.1) | types | planned |
 | logging | shipped (v0.1) | developer-experience | planned |
 | architecture | shipped (v0.1) | versioning | planned |
-| configuration | planned | purpose-and-scope | planned |
-| dependencies | planned | dry | planned (lens promoted) |
-| security | planned | principles-and-patterns | planned (lens promoted) |
+| configuration | shipped (v0.1) | purpose-and-scope | planned |
+| dependencies | shipped (v0.1) | dry | planned (lens promoted) |
+| security | shipped (v0.1) | principles-and-patterns | planned (lens promoted) |
 | environments | planned | software-complexity | planned (lens promoted) |
 | continuous-integration | planned | (TBD 18th) | open |
 
