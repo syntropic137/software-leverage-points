@@ -38,12 +38,11 @@ while IFS= read -r dir; do
 done < <(find skills -mindepth 1 -maxdepth 1 -type d)
 LP_COUNT=$((TOTAL_SKILLS - OPERATOR_COUNT))
 
-EXPECTED=18
-if [[ "$LP_COUNT" -ne "$EXPECTED" ]]; then
-  note_fail "skills/ has $LP_COUNT leverage-point dirs, expected $EXPECTED"
-else
-  note_ok "skills/ contains $LP_COUNT leverage-point skills (excluding $OPERATOR_COUNT operator skills)"
-fi
+# LP_COUNT is derived from the filesystem; downstream cross-doc checks
+# (README, MIGRATION, docs/leverage-points.md) assert that the docs match
+# whatever the filesystem has. Adding or removing an SLP directory updates
+# LP_COUNT automatically; the docs must be regenerated to stay in sync.
+note_ok "skills/ contains $LP_COUNT leverage-point skills (excluding $OPERATOR_COUNT operator skills)"
 
 if grep -q "$LP_COUNT leverage-point skills" README.md; then
   note_ok "README.md mentions $LP_COUNT leverage-point skills"
