@@ -21,6 +21,18 @@ description: Use when reviewing a plan document, PR diff, or codebase against mu
 
 `target`: file path, directory, plan document, or git diff.
 `software_leverage_point_subset` (optional): list of software leverage point names to fan out across. Default: all installed software leverage point skills (siblings of this skill that are NOT `skill-builder`, `skill-auditor`, or `software-leverage-review`).
+`maturity_hint` (optional): one of `poc`, `prototype`, `growing`, `production`, `safety-critical`. When provided, overrides the maturity stage that would otherwise be inferred from the target's signals (see `## Calibrate severity to maturity` below). Use this when the caller knows the project's intent better than the visible signals reveal (for example, a prototype repo that is about to be promoted to production).
+
+## Calibrate severity to maturity
+
+Before applying any leverage point's red flags, sense the target's maturity stage from signals (size, age, deploy frequency, # contributors, public consumers, presence of CI, language toolchain, visible roadmap). Calibrate finding severity accordingly:
+
+- **POC / prototype:** surface most findings as `info` ("plan to address as you scale"). Reserve `warn` and `error` for things that compound badly later (data shape lock-in, security holes that ship to users).
+- **Growing internal tool:** `warn` for hygiene gaps, `error` for things that will hurt production migration.
+- **Production service:** `warn` and `error` apply at the documented rigor.
+- **Safety-critical:** every finding shifts up one severity from baseline.
+
+The fan-out subagents inherit this calibration via the prompt; the synthesis pass re-applies it as a sanity check. If `maturity_hint` is supplied as input, it overrides the inferred stage.
 
 ## Workflow
 
