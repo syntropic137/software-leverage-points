@@ -101,7 +101,23 @@ description: Use when <triggers>
 ## References           (relevant prompt files, schema docs, lens refs)
 ```
 
-Operator skills MAY include `## Calibrate severity to maturity` (per Stream B) and similar procedural extensions, but they keep the Input/Workflow/Output spine.
+Operator skills MAY include `## Calibrate severity to maturity` and similar procedural extensions, but they keep the Input/Workflow/Output spine.
+
+## Operator Flows
+
+The 3 operator skills serve 5 distinct use cases. Authors should know which flow they are touching and which operator owns it. Mixing flows across operators is a smell.
+
+| # | Flow | Operator | Triggers when... |
+|---|---|---|---|
+| 1 | **Code review** using L2 skills | `software-leverage-review` | A plan, PR, or codebase needs review; L2 skills are present. |
+| 2 | **Bootstrap L2 skills** (first-time setup) | `skill-builder` | The target repo has no `.claude/skills/<lp>/SKILL.md` yet. Analyze the code, template from L1, ship each L2 with Maturity Assessment + Growth Direction. |
+| 3 | **L2 drift detection** | `skill-auditor` | Code has changed since the L2 was last reviewed; Repo Context or Maturity Assessment may be stale. |
+| 4 | **Maturity update** | `skill-auditor` flags, `skill-builder` updates | The target outgrew its L2's claimed level (POC now has CI and external users; production now has safety-critical surface; etc.). |
+| 5 | **Growth direction realization** | `software-leverage-review` or `skill-auditor` | The L2's Growth Direction "next step" is overdue: the target hit the trigger conditions but did not address the step. |
+
+Flows 2 and 4 are L2 **creation/update** flows. Flows 1 and 5 are L2 **consumption** flows. Flow 3 is the watchdog that connects them.
+
+The L2 SKILL.md is therefore a journey artifact: created at flow 2, consumed at flows 1 and 5, watched at flow 3, updated at flow 4. When authoring or refining any skill, ask which flow(s) the change affects; that decides which operator skill needs alignment.
 
 ## House Rules
 
