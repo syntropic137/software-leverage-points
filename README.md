@@ -21,8 +21,8 @@ The plugin separates generic principles (L1) from repo-specific calibration (L2)
 ```mermaid
 flowchart TD
     subgraph L1[L1: Plugin generic skills]
-        M[18 SLPs + 3 operators]
-        R[3 lens reference docs]
+        M[SLPs + operator skills]
+        R[lens reference docs]
     end
 
     subgraph L2[L2: Repo-specific skills, generated]
@@ -51,7 +51,7 @@ This plugin has been developed against `obra/superpowers` at HEAD as of 2026-04-
 
 ## Status
 
-v0.1.0 (alpha). 18 leverage-point skills shipped, 3 operator skills (`software-leverage-review`, `skill-builder`, `skill-auditor`), 3 lens reference docs. Four evals run: the three orchestrator runs scored upward on the 12-point rubric (10/12, 11/12, 12/12), and eval-004 is a single-skill `skill-auditor` self-audit (Specificity 3/3; the other rubric dimensions do not apply to a single-skill run). See `MIGRATION.md` for the migration plan and `docs/evals/` for evidence.
+v0.1.0 (alpha). The leverage-point skills, operator skills, and lens reference docs are catalogued at `docs/leverage-points.md`. Four evals run: the three orchestrator runs scored upward on the 12-point rubric (10/12, 11/12, 12/12), and eval-004 is a single-skill `skill-auditor` self-audit (Specificity 3/3; the other rubric dimensions do not apply to a single-skill run). See `MIGRATION.md` for the migration plan and `docs/evals/` for evidence.
 
 ## Install
 
@@ -77,17 +77,38 @@ A `.claude-plugin/marketplace.json` listing is planned for v0.2.
 
 ## Skills
 
-The full inventory of shipped skills (18 leverage points, 3 operator skills, 3 lens reference docs) is the reference doc at `docs/leverage-points.md`. When invoked through a vendor's plugin discovery, skills are namespaced (e.g., `/software-leverage-points:testing`).
+The shipped skills are leverage-point skills, operator skills, and lens reference docs. Detailed status and file paths live in `docs/leverage-points.md`. When invoked through a vendor's plugin discovery, skills are namespaced (e.g., `/software-leverage-points:testing`).
+
+### Leverage-point skills
+
+Each leverage-point skill reviews a codebase, plan, or PR through one high-leverage lens. The list below is auto-generated; for the canonical reference doc with status flags and lens references, see `docs/leverage-points.md`.
+
+<!-- begin:readme-slp-catalog -->
+- **architecture**: Use when reviewing architectural concerns: module boundaries, dependency direction, layer discipline, bounded-context isolation, ADR coverage, premature abstraction, and structural fitness for change
+- **configuration**: Use when reviewing configuration concerns: env-var layering, typed config objects, startup validation, secret/non-secret separation, schema discoverability, environment-dependent defaults, twelve-factor compliance, magic numbers
+- **continuous-deployment**: Use when reviewing deployment concerns: rollback safety, health-gated deploys, deploy/release decoupling via feature flags, single-artifact promotion, deploy frequency and lead time, runbook freshness, deploy-credential scoping
+- **continuous-integration**: Use when reviewing CI concerns: pre-merge gating, branch protection enforcement, fast feedback loops, full-suite vs subset gating, flaky-test discipline, workflow review hygiene, supply-chain attestation, mainline-always-green invariant
+- **dependencies**: Use when reviewing dependency concerns: lockfile health, version pinning, immutable references, maintenance signals, transitive audit gates, monorepo version skew, reviewable lockfiles, license posture
+- **developer-experience**: Use when reviewing developer-experience concerns: onboarding-time budget, inner-loop speed, task-runner discoverability, error-message actionability, formatter/linter automation, AI-agent ergonomics, reproducible local environment
+- **documentation**: Use when reviewing documentation concerns: README presence and quality, public API documentation, ADR coverage for non-obvious decisions, inline rationale comments, TBD/placeholder hygiene in shipped docs
+- **dry**: Use when reviewing DRY concerns: knowledge-vs-text duplication, repeated business rules across boundaries, magic constants, configuration duplication, copy-pasted test fixtures, premature abstraction risk, rule-of-three for extraction
+- **environments**: Use when reviewing environment concerns: dev/staging/prod parity, declarative environment manifests, build vs runtime separation, environment promotion path, secret-loader parity across environments, reproducible local setup
+- **error-handling**: Use when reviewing error-handling concerns: error taxonomy, propagation discipline, swallow-vs-crash, retry semantics with backoff and idempotency, exit codes as API, error messages as contract, cause-chain preservation
+- **logging**: Use when reviewing logging concerns: structured-vs-unstructured logs, log-level policy, secret and PII redaction, correlation IDs in distributed systems, log/trace linkage, print statements in production code paths
+- **principles-and-patterns**: Use when reviewing cross-cutting design principles: SOLID applicability, separation of concerns, dependency direction, composition vs inheritance, coupling and cohesion, OO-vs-functional style consistency, pattern enforcement style, project-level bounded-context coupling
+- **purpose-and-scope**: Use when reviewing purpose-and-scope concerns: stated project purpose, declared in-scope and out-of-scope, non-goals, plan-purpose alignment, scope-creep within a single change, project-level bounded contexts, dependency-purpose linkage
+- **security**: Use when reviewing security concerns: secrets in code, SAST coverage, input validation, authn/authz boundaries, sensitive-data handling, dependency CVEs, SSRF, hand-rolled escaping, threat modeling for high-stakes changes
+- **software-complexity**: Use when reviewing software complexity concerns: cognitive load, cyclomatic and cognitive complexity bounds, deep-vs-shallow modules, accidental coupling, premature abstraction, asymmetric simplicity, comments-explain-why
+- **testing**: Use when reviewing testing concerns: pyramid coverage (unit, integration, E2E), test code quality, TDD discipline, regression discipline, FIRST principles, feedback-loop speed
+- **types**: Use when reviewing type-system concerns: type-coverage in public APIs, primitive obsession vs refinement, runtime validation at trust boundaries, soundness gaps and escape hatches, narrow vs wide types, strict-mode discipline
+- **versioning**: Use when reviewing versioning concerns: declared scheme (semver/calver/ZeroVer), changelog hygiene, deprecation policy and migration paths, public-API stability classification, version-bump automation, manifest-drift across multiple files
+<!-- end:readme-slp-catalog -->
 
 ### Layers
 
 - **L1 (meta-skills):** generic skills that ship in this plugin. Repo-agnostic.
 - **L2 (repo skills):** skills that `skill-builder` generates inside a target repo's `.claude/skills/`, customized for that repo's stack and conventions.
 - **L3 (active reviews):** the orchestrator's runtime: parallel subagents reviewing a target through every lens.
-
-## Roadmap and skill catalog
-
-The full skill catalog (all 18 leverage points, plus operator and lens docs) lives in `docs/leverage-points.md`. This README is the explanation layer (mental model, why this exists). Install instructions are below; the catalog is its own reference.
 
 ## Authoring style
 

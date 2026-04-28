@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # regenerate-catalogs.sh: rewrite marker-bounded blocks in docs/leverage-points.md
-# from skills/*/SKILL.md frontmatter. Idempotent and safe to re-run.
+# and README.md from skills/*/SKILL.md frontmatter. Idempotent and safe to re-run.
 #
 # Source of truth: each skills/<name>/SKILL.md frontmatter (the `name:` field).
 # Classification: operator skills are software-leverage-review, skill-builder,
@@ -23,6 +23,7 @@ ROOT="$(git rev-parse --show-toplevel)"
 cd "$ROOT"
 
 CATALOG_FILE="docs/leverage-points.md"
+README_FILE="README.md"
 OPERATOR_REGEX='^(software-leverage-review|skill-builder|skill-auditor)$'
 
 # -----------------------------------------------------------------------------
@@ -110,6 +111,19 @@ lens_title() {
   esac
 }
 
+build_readme_slp_list() {
+  for slp in "${SORTED_SLPS[@]}"; do
+    src="skills/$slp/SKILL.md"
+    desc=""
+    [[ -f "$src" ]] && desc=$(extract_description "$src")
+    if [[ -n "$desc" ]]; then
+      printf -- '- **%s**: %s\n' "$slp" "$desc"
+    else
+      printf -- '- **%s**\n' "$slp"
+    fi
+  done
+}
+
 build_lens_table() {
   printf '| Lens | File |\n'
   printf '|---|---|\n'
@@ -144,14 +158,17 @@ replace_block() {
 OP_FILE=$(mktemp)
 SLP_FILE=$(mktemp)
 LENS_FILE=$(mktemp)
-trap 'rm -f "$OP_FILE" "$SLP_FILE" "$LENS_FILE"' EXIT
+README_SLP_FILE=$(mktemp)
+trap 'rm -f "$OP_FILE" "$SLP_FILE" "$LENS_FILE" "$README_SLP_FILE"' EXIT
 
-build_operator_table > "$OP_FILE"
-build_slp_table      > "$SLP_FILE"
-build_lens_table     > "$LENS_FILE"
+build_operator_table   > "$OP_FILE"
+build_slp_table        > "$SLP_FILE"
+build_lens_table       > "$LENS_FILE"
+build_readme_slp_list  > "$README_SLP_FILE"
 
 replace_block "$CATALOG_FILE" '<!-- begin:operator-catalog -->' '<!-- end:operator-catalog -->' "$OP_FILE"
 replace_block "$CATALOG_FILE" '<!-- begin:slp-catalog -->'      '<!-- end:slp-catalog -->'      "$SLP_FILE"
 replace_block "$CATALOG_FILE" '<!-- begin:lens-catalog -->'     '<!-- end:lens-catalog -->'     "$LENS_FILE"
+replace_block "$README_FILE"  '<!-- begin:readme-slp-catalog -->' '<!-- end:readme-slp-catalog -->' "$README_SLP_FILE"
 
-echo "regenerate-catalogs.sh: wrote ${#SORTED_OPERATORS[@]} operators, ${#SORTED_SLPS[@]} SLPs, $(ls skills/software-leverage-review/references/*.md 2>/dev/null | wc -l | tr -d ' ') lens refs to $CATALOG_FILE"
+echo "regenerate-catalogs.sh: wrote ${#SORTED_OPERATORS[@]} operators, ${#SORTED_SLPS[@]} SLPs, $(ls skills/software-leverage-review/references/*.md 2>/dev/null | wc -l | tr -d ' ') lens refs to $CATALOG_FILE and $README_FILE"

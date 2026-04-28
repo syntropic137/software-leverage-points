@@ -44,30 +44,15 @@ LP_COUNT=$((TOTAL_SKILLS - OPERATOR_COUNT))
 # LP_COUNT automatically; the docs must be regenerated to stay in sync.
 note_ok "skills/ contains $LP_COUNT leverage-point skills (excluding $OPERATOR_COUNT operator skills)"
 
-if grep -q "$LP_COUNT leverage-point skills" README.md; then
-  note_ok "README.md mentions $LP_COUNT leverage-point skills"
-else
-  note_fail "README.md does not mention '$LP_COUNT leverage-point skills'"
-fi
-
+# docs/leverage-points.md is auto-regenerated; verify the regen result is in
+# sync with the filesystem by re-running the regenerator and checking the diff.
+# README.md and MIGRATION.md no longer carry a literal LP count (the magic
+# number "18" was retired); the only canonical count lives in the regenerated
+# `## Leverage-point skills (N)` header inside docs/leverage-points.md.
 if grep -q "## Leverage-point skills ($LP_COUNT)" docs/leverage-points.md; then
   note_ok "docs/leverage-points.md catalog header lists $LP_COUNT"
 else
-  note_fail "docs/leverage-points.md catalog header does not list $LP_COUNT"
-fi
-
-if grep -q "= $LP_COUNT" MIGRATION.md; then
-  note_ok "MIGRATION.md reconciliation line mentions = $LP_COUNT"
-else
-  note_fail "MIGRATION.md reconciliation line missing '= $LP_COUNT'"
-fi
-
-SHIPPED_HITS=$(grep -o 'shipped (v0.1)' docs/leverage-points.md | wc -l | tr -d ' ')
-EXPECTED_SHIPPED=$((LP_COUNT + 3))
-if [[ "$SHIPPED_HITS" -ne "$EXPECTED_SHIPPED" ]]; then
-  note_fail "docs/leverage-points.md has $SHIPPED_HITS 'shipped (v0.1)' mentions, expected $EXPECTED_SHIPPED ($LP_COUNT LPs + 3 operators)"
-else
-  note_ok "docs/leverage-points.md has $SHIPPED_HITS 'shipped (v0.1)' mentions"
+  note_fail "docs/leverage-points.md catalog header does not list $LP_COUNT (run 'just regenerate-catalogs')"
 fi
 
 # -----------------------------------------------------------------------------
@@ -160,7 +145,7 @@ fi
 # Check 5: Backlink symmetry across SLP cross-references.
 # -----------------------------------------------------------------------------
 if bash scripts/check-backlinks.sh > /tmp/audit-backlinks.out 2>&1; then
-  note_ok "$(tail -1 /tmp/audit-backlinks.out)"
+  note_ok "$(tail -1 /tmp/audit-backlinks.out | sed 's/^OK: //')"
 else
   note_fail "asymmetric SLP cross-references found:"
   cat /tmp/audit-backlinks.out

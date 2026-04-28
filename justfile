@@ -6,6 +6,12 @@
 default:
     @just --list
 
+# QA aggregator: runs every check that CI runs. CI invokes this directly.
+# Local devs: run `just regenerate-catalogs` first if you added or removed a
+# skill, then `just qa` to verify nothing else drifted.
+qa: check-catalogs audit check-backlinks
+    @echo "qa: ALL CHECKS PASS"
+
 # Run the full audit (count consistency, link integrity, em-dashes, backlink symmetry).
 audit:
     bash scripts/audit.sh
