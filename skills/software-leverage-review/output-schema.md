@@ -1,5 +1,11 @@
 # Leverage-Review Output Schema
 
+> **Schema validator:** see `output-schema.json` (draft-07) for the formal JSON Schema. Validate a finding-output JSON file with:
+> ```
+> bun scripts/validate-output.ts --file path/to/output.json
+> ```
+> Run from the repo root. The markdown below is the human-readable version; the JSON Schema is authoritative.
+
 All software leverage point skills and the auditor emit findings conforming to this shape:
 
 ```json
