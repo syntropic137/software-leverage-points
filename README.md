@@ -18,11 +18,17 @@ The skills compose with [obra/superpowers](https://github.com/obra/superpowers),
 
 Multi-vendor scaffolding patterns adapted from [obra/superpowers](https://github.com/obra/superpowers). We track superpowers as a git `upstream` remote so we can selectively pull scaffolding improvements over time. Skills, agents, and commands are entirely our own.
 
+## Compatibility
+
+This plugin has been developed against `obra/superpowers` at HEAD as of 2026-04-27. The two plugins compose at runtime via vendor-native plugin discovery; no version pin is enforced today. If superpowers introduces breaking changes to its scaffolding conventions, this plugin's `upstream` git remote (pinned to `obra/superpowers`) makes selectively merging only the scaffolding changes straightforward. Skill compatibility is informal: this plugin invokes `superpowers:brainstorming`, `superpowers:writing-plans`, `superpowers:subagent-driven-development`, and `superpowers:writing-skills` by name. Breaking changes to those skills' descriptions or interfaces will require this plugin's docs to be updated.
+
 ## Status
 
-v0.1.0 (alpha). Four skills shipped, ported from a validated POC. Roadmap is to grow the leverage-point inventory toward 18. See `MIGRATION.md` for the migration plan and current state.
+v0.1.0 (alpha). 18 leverage-point skills shipped, 2 operator skills (`software-leverage-review`, `skill-builder`), 3 lens reference docs. Three evals run with scores trending upward (10/12, 11/12, 12/12) as the citation discipline and lens coverage matured. See `MIGRATION.md` for the migration plan and `docs/evals/` for evidence.
 
 ## Install
+
+This README is the explanation layer: mental model, rationale, and install instructions. The reference inventory of all shipped skills lives in `docs/leverage-points.md`. How-to guides for individual skills live in each skill's own `SKILL.md`. The split follows Diátaxis (explanation, how-to, reference) so each document has one job.
 
 This plugin runs alongside `obra/superpowers`. Install both:
 
@@ -42,16 +48,9 @@ For other vendors, see:
 
 A `.claude-plugin/marketplace.json` listing is planned for v0.2.
 
-## Skills shipped at v0.1
+## Skills
 
-| Skill | Layer | Purpose |
-|---|---|---|
-| `testing` | leverage point | Review testing concerns: framework presence, test layout, coverage, mocking discipline |
-| `documentation` | leverage point | Review documentation: README, API docs, ADRs, TBD markers |
-| `software-leverage-review` | orchestrator | Fan out subagents per leverage point, synthesize findings using lens references (DRY first; principles-and-patterns and software-complexity to follow) |
-| `skill-builder` | operator | Bootstrap repo-specific (L2) skills from the plugin's generic (L1) meta-skills, customized per repo's stack |
-
-When invoked through a vendor's plugin discovery, skills are namespaced (e.g., `/software-leverage-points:testing`).
+The full inventory of shipped skills (18 leverage points, 3 operator skills, 3 lens reference docs) is the reference doc at `docs/leverage-points.md`. When invoked through a vendor's plugin discovery, skills are namespaced (e.g., `/software-leverage-points:testing`).
 
 ### Layers
 
@@ -59,23 +58,9 @@ When invoked through a vendor's plugin discovery, skills are namespaced (e.g., `
 - **L2 (repo skills):** skills that `skill-builder` generates inside a target repo's `.claude/skills/`, customized for that repo's stack and conventions.
 - **L3 (active reviews):** the orchestrator's runtime: parallel subagents reviewing a target through every lens.
 
-## Roadmap to 18 leverage points
+## Roadmap and skill catalog
 
-The goal is one skill per high-leverage concern. The shape is the same for each: a SKILL.md with frontmatter, when-to-use, structured checks, references to ADRs/books/thinkers, and an output schema all subagents conform to.
-
-Targeted leverage-point set (count to be reconciled with the user, currently 14 confirmed plus 3 promoted lenses plus 1 TBD = 18):
-
-| LP | Status | LP | Status |
-|---|---|---|---|
-| testing | shipped (v0.1) | continuous-deployment | shipped (v0.1) |
-| documentation | shipped (v0.1) | types | shipped (v0.1) |
-| logging | shipped (v0.1) | developer-experience | shipped (v0.1) |
-| architecture | shipped (v0.1) | versioning | shipped (v0.1) |
-| configuration | shipped (v0.1) | purpose-and-scope | shipped (v0.1) |
-| dependencies | shipped (v0.1) | dry | shipped (v0.1) |
-| security | shipped (v0.1) | principles-and-patterns | shipped (v0.1) |
-| environments | shipped (v0.1) | software-complexity | shipped (v0.1) |
-| continuous-integration | shipped (v0.1) | error-handling | shipped (v0.1) |
+The full skill catalog (all 18 leverage points, plus operator and lens docs) lives in `docs/leverage-points.md`. This README is the explanation layer (mental model, why this exists). Install instructions are below; the catalog is its own reference.
 
 ## Authoring style
 
