@@ -24,7 +24,7 @@ description: Use when reviewing a plan document, PR diff, or codebase against mu
 
 ## Workflow
 
-1. Resolve `software_leverage_point_subset`. List sibling skill directories under `../`. Filter to leverage points (exclude operator skills).
+1. Resolve `software_leverage_point_subset`. List sibling skill directories under `../`. Filter to leverage points (exclude operator skills: `skill-builder`, `skill-auditor`, and this orchestrator). Note: `dry`, `principles-and-patterns`, and `software-complexity` are now valid LPs in the default fan-out (each has its own `SKILL.md`); the matching docs under `references/` are still consulted in step 4 as a separate synthesis pass, not skipped.
 2. For each software leverage point in `software_leverage_point_subset`, dispatch a subagent using the prompt in `prompt_review-one-software-leverage-point.md`. Pass `SOFTWARE_LEVERAGE_POINT`, `TARGET_PATH`, and `OUTPUT_SCHEMA_PATH = output-schema.md`. Run dispatches in parallel.
 3. Collect each subagent's JSON output.
 4. Consult `references/dry.md`, `references/principles-and-patterns.md`, `references/software-complexity.md` (whichever are present in this skill's `references/` directory) and apply a synthesis pass: surface any cross-cutting findings the per software leverage point subagents missed.
