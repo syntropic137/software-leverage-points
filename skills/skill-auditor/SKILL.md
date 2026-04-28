@@ -29,6 +29,10 @@ description: Use when reviewing whether a plugin's leverage-point skills still m
    - For each skill, parse the `## Repo Context` section. Extract claimed facts (language, framework, tool versions, layout).
    - Verify each claim against the target repo's actual state (Read/Glob/Grep).
    - For each mismatch, emit a finding with `severity: warn` (drift), the claimed value, the actual value, and a suggested update.
+   - Parse the `## Maturity Assessment` and `## Growth Direction` sections (added by `skill-builder`). Compare the claimed level against current signals (CI presence, contributor count, deploy cadence, public consumers, release tags). Apply maturity-drift checks:
+     - `severity: warn`: the Maturity Assessment claims a level the target has outgrown (for example, "POC" with CI green for 90 days, multiple contributors, and external users).
+     - `severity: info`: the Growth Direction's "natural next step" is now overdue (the documented trigger has fired without the step being addressed).
+     - `severity: info`: `Last reviewed` is older than 6 months even when the assessment still appears accurate (stale review timestamp).
 
 2. If `mode` includes `cross-doc`:
    - Read the plugin's load-bearing docs: `README.md`, `MIGRATION.md`, the design spec (if present), and `docs/leverage-points.md`.
@@ -50,6 +54,8 @@ Conforms to `../software-leverage-review/output-schema.json` per-LP shape.
 
 - An L2 skill claims a framework version the target's manifest no longer pins
 - An L2 skill's `Repo Context` lists tooling that no longer appears in the repo
+- An L2 skill's `Maturity Assessment` says POC, but the target now ships to external users with CI gates and multiple contributors
+- An L2 skill's `Growth Direction` documents a trigger that has fired (e.g., "first incident where log noise hides the cause") without the next step being addressed
 - README and MIGRATION disagree on what is shipped
 - An LP count appears differently in README vs spec vs MIGRATION
 - A SKILL.md references a file that does not exist
