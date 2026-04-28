@@ -19,34 +19,18 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Verify manifest version parity
-        run: |
-          set -euo pipefail
-          manifests=(
-            ".claude-plugin/plugin.json"
-            ".codex-plugin/plugin.json"
-            ".cursor-plugin/plugin.json"
-            "gemini-extension.json"
-          )
-          versions=()
-          for m in "${manifests[@]}"; do
-            v=$(jq -r '.version' "$m")
-            versions+=("$m=$v")
-          done
-          unique=$(printf '%s\n' "${versions[@]}" | awk -F= '{print $2}' | sort -u | wc -l)
-          if [[ "$unique" -ne 1 ]]; then
-            echo "FAIL: manifest versions disagree:"
-            printf '  %s\n' "${versions[@]}"
-            exit 1
-          fi
-          echo "OK: all manifests share version $(printf '%s\n' "${versions[@]}" | head -1 | awk -F= '{print $2}')"
+      - name: Verify manifest version parity (all declared files)
+        run: bash scripts/bump-version.sh --check
 
       - name: Enforce version bump on content change
         run: |
           set -euo pipefail
           base="${{ github.event.pull_request.base.sha }}"
-          # List files changed in the PR, excluding manifests themselves.
-          changed=$(git diff --name-only "$base"...HEAD -- . | grep -vE '\.claude-plugin/plugin\.json$|\.codex-plugin/plugin\.json$|\.cursor-plugin/plugin\.json$|^gemini-extension\.json$' || true)
+          # Files declared in .version-bump.json are the manifest set we manage.
+          declared=$(jq -r '.files[].path' .version-bump.json)
+          # Build a grep -vE pattern from the declared paths.
+          exclude_pattern=$(printf '%s\n' $declared | sed 's|/|\\/|g; s|\.|\\.|g' | paste -sd'|' -)
+          changed=$(git diff --name-only "$base"...HEAD -- . | grep -vE "^(${exclude_pattern})$" || true)
           if [[ -z "$changed" ]]; then
             echo "OK: no non-manifest content changed; version bump not required"
             exit 0
@@ -55,7 +39,7 @@ jobs:
           head_version=$(jq -r '.version' .claude-plugin/plugin.json)
           if [[ "$base_version" == "$head_version" ]]; then
             echo "FAIL: content changed but .claude-plugin/plugin.json version is still $head_version"
-            echo "Bump the version in all four manifests (.claude-plugin, .codex-plugin, .cursor-plugin, gemini-extension.json)."
+            echo "Run 'just bump <new-version>' locally to bump all declared manifests."
             exit 1
           fi
           echo "OK: version bumped $base_version -> $head_version"

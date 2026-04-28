@@ -28,3 +28,15 @@ check-catalogs:
 # Verify SLP-to-SLP cross-references are bidirectional.
 check-backlinks:
     bash scripts/check-backlinks.sh
+
+# Bump the plugin version across all declared manifests + stub release notes.
+bump version:
+    bash scripts/bump-version.sh {{version}}
+
+# Show current versions across all declared manifests; flag drift.
+check-version:
+    bash scripts/bump-version.sh --check
+
+# Check + scan the repo for stray references to the current version string.
+audit-version:
+    bash scripts/bump-version.sh --audit
