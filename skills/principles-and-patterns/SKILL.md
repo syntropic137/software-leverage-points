@@ -11,7 +11,7 @@ Cross-cutting design principles (SOLID, separation of concerns, dependency inver
 
 **Core principle:** Principles are scoped tools, not universal laws. Pick the principles that fit the codebase's paradigm and the problem's shape, declare them, and apply them consistently within a module.
 
-> **Lens cross-reference.** A peer reference doc lives at `../software-leverage-review/references/principles-and-patterns.md` for the orchestrator's synthesis pass. This SKILL.md presents the same lens in the principle-doc shape; the two artifacts share content but serve different audiences.
+> **Skill cross-reference.** A peer reference doc lives at `../software-leverage-review/references/principles-and-patterns.md` for the orchestrator's synthesis pass. This SKILL.md presents the principle-doc shape; the two artifacts share content but serve different audiences.
 
 ## Core Principles
 
@@ -87,6 +87,16 @@ A module that mixes pure-functional patterns with mutable-OO patterns at random 
 
 The principle is paradigm-independent: declare the module's style and apply it.
 
+### 9. Code stewardship: don't leave broken windows; leave it cleaner than you found it
+
+Three related disciplines about the social fabric of a long-lived codebase:
+
+- **Broken Windows Theory.** Bad designs, wrong decisions, and poor code left unrepaired signal that quality does not matter, and the next contributor matches the surrounding bar. Degradation compounds. Fix problems while they are small: rename the misleading variable, refactor the destructive function, update the outdated doc. The cost of fixing one window now is far less than the cost of replacing the wall later.
+- **Boy Scout Rule (Campsite Rule).** Leave the code better than you found it. Every PR is an opportunity to fix at least one small thing in the area being touched: a clarifying rename, a dead-code removal, a missing test, a comment that explains the why. Done consistently, the codebase improves under maintenance pressure rather than degrading under it.
+- **Technical debt as a managed quantity.** Shortcuts are a financing tool, not a moral failure. Assuming debt is a valid strategy for market timing or prototyping; the discipline is to track what was borrowed, plan the refactor that pays it down, and recognise that uncorrected debt accrues interest in the form of compounding maintenance cost. A working heuristic: allocate roughly **20% of every feature's time budget to paying down debt in the area being touched**. Under-allocating leaves debt to compound; over-allocating ignores the actual product work the team is paid to ship.
+
+Tech debt paydown is gated by the [`testing`](../testing/SKILL.md) skill: refactoring without tests is risky, so improving test coverage in the affected area is often the first move. Refactoring under green tests is the actual mechanism of debt repayment. Cross-reference: the [`software-complexity`](../software-complexity/SKILL.md) skill carries the cost framing (maintenance dominates implementation, per Kanat-Alexander's equation) that makes the 20% allocation rational rather than aspirational.
+
 ## Red Flags - STOP
 
 - A class or module touches multiple axes of change (HTTP parsing plus business rules plus persistence in one file)
@@ -99,6 +109,9 @@ The principle is paradigm-independent: declare the module's style and apply it.
 - Pattern applied (Factory, Observer, Strategy, Visitor) with no underlying problem the pattern solves
 - Module mixes functional and OO styles within itself with no stated convention
 - No stated stance on principle weighting (SOLID-strict vs SOLID-as-heuristic) or pattern enforcement (catalog-driven vs ad-hoc)
+- Surrounding code carries known smells (broken windows: misleading names, dead branches, outdated docs) and the PR walks past them without repair
+- Technical debt is unrecorded; nobody knows what was borrowed, when interest started accruing, or which refactor pays it down
+- No time allocated for debt paydown across feature work; every sprint ships only new features and the maintenance term grows unchecked
 
 ## Rationalization Prevention
 
@@ -185,6 +198,10 @@ Soft sketch; not a checklist. Where appropriate is shaped by the target's maturi
 - **Larry Constantine and Edward Yourdon, *Structured Design* (1979).** Backs principle 6 (coupling and cohesion). The original coupling-and-cohesion vocabulary; the seven coupling levels and the cohesion taxonomy.
 - **Alistair Cockburn, "Hexagonal Architecture" (2005).** Backs principle 4 (dependency direction). Ports and adapters; the application core ignorant of its drivers.
 - **Eric Evans, *Domain-Driven Design* (2003).** Backs principles 3 (separation of concerns at the strategic level) and 6 (cross-context coupling). Bounded contexts and context maps.
+- **Andy Hunt and Dave Thomas, *The Pragmatic Programmer* (1999, 2019).** Backs principle 9 (Broken Windows Theory and the Boy Scout Rule). The canonical articulation that small unrepaired smells license larger ones, and that maintenance discipline is a per-PR habit, not a quarterly initiative.
+- **Ward Cunningham, "The WyCash Portfolio Management System" (OOPSLA 1992).** Backs principle 9 (technical debt as a managed quantity). Origin of the debt metaphor: shortcuts are a financing tool with principal and interest, not a moral failure to be hidden.
+- **Max Kanat-Alexander, *Code Simplicity* (2012).** Backs principle 9 (cost framing for stewardship). The equation of software design (covered in the [`software-complexity`](../software-complexity/SKILL.md) skill) is what makes the 20% paydown allocation rational: the maintenance term dominates over time, so refusing to pay it down is the most expensive shortcut available.
+- **Milan Milanovic, "Laws of Software Engineering."** Backs principle 9. Curated catalog of named laws (Broken Windows, Boy Scout, technical debt, others) that recur across the principles literature; useful as a teaching reference.
 
 ## Suggested technologies (as of 2026-04-28)
 
@@ -196,3 +213,10 @@ These go stale fast; the date is the "as-of." Verify currency before adopting. T
 - **Pattern catalogs:** team-maintained docs listing approved patterns and their use cases; ADRs that introduce a new pattern alongside the problem it solves.
 - **Cohesion and coupling metrics:** Sonar's cognitive complexity, lattix-style dependency analysis, ndepend (JVM/.NET). Useful as smell-finders; the verdict is human.
 - **Bounded-context tooling:** explicit module boundaries (Java modules, TypeScript project references, Rust crates), with context-map docs that name the integration patterns between them.
+
+## Continual improvement
+
+This skill is maintained at:
+https://github.com/syntropic137/software-leverage-points/blob/main/skills/principles-and-patterns/SKILL.md
+
+To improve it, edit the file directly and follow the chassis discipline in [`maintaining-software-leverage-points`](../../.claude/skills/maintaining-software-leverage-points/SKILL.md): regenerate catalogs, run `just qa`, then commit.

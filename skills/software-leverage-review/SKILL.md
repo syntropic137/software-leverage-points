@@ -8,7 +8,7 @@ description: Use when reviewing a plan document, PR diff, or codebase against mu
 ## When to Use
 
 - A plan document is drafted and needs review before implementation
-- A PR diff needs cross-cutting review through every leverage-point lens
+- A PR diff needs cross-cutting review through every leverage-point skill
 - A codebase audit is requested
 - An autonomous agent has reached a "plan complete, ready to review" gate
 
@@ -58,7 +58,14 @@ The fan-out subagents inherit this calibration via the prompt; the synthesis pas
 
 - `output-schema.json` (canonical contract; required reading for all subagents)
 - `output-schema.md` (human-readable companion to the JSON schema)
-- `references/dry.md` (lens, consulted in synthesis)
-- `references/principles-and-patterns.md` (lens, consulted in synthesis)
-- `references/software-complexity.md` (lens, consulted in synthesis)
+- `references/dry.md` (consulted in synthesis)
+- `references/principles-and-patterns.md` (consulted in synthesis)
+- `references/software-complexity.md` (consulted in synthesis)
 - `prompt_review-one-software-leverage-point.md` (subagent prompt)
+
+## Continual improvement
+
+This skill is maintained at:
+https://github.com/syntropic137/software-leverage-points/blob/main/skills/software-leverage-review/SKILL.md
+
+To improve it, edit the file directly and follow the chassis discipline in [`maintaining-software-leverage-points`](../../.claude/skills/maintaining-software-leverage-points/SKILL.md): regenerate catalogs, run `just qa`, then commit.

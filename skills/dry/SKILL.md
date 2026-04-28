@@ -11,7 +11,7 @@ DRY (Don't Repeat Yourself) is a principle about knowledge, not text. Done well,
 
 **Core principle:** Each piece of authoritative knowledge has a single representation. Incidental text-level repetition waits for the third concrete case before extraction. The wrong abstraction is more expensive than duplication.
 
-> **Lens cross-reference.** A peer reference doc lives at `../software-leverage-review/references/dry.md` for the orchestrator's synthesis pass. This SKILL.md presents the same lens in the principle-doc shape; the two artifacts share content but serve different audiences.
+> **Skill cross-reference.** A peer reference doc lives at `../software-leverage-review/references/dry.md` for the orchestrator's synthesis pass. This SKILL.md presents the principle-doc shape; the two artifacts share content but serve different audiences.
 
 ## Core Principles
 
@@ -54,7 +54,7 @@ The exception is a literal that genuinely means itself (`if x == 0`, `for i in r
 
 The same default port, timeout, URL, or feature flag declared independently in `.env`, a settings module, a CI config, and a Docker file is configuration drift waiting to surface. One canonical source (a typed config module) is the only durable answer; everything else refers to it.
 
-Cross-reference: the `configuration` lens carries the typed-config principle; this lens carries the don't-duplicate-the-value-across-files check.
+Cross-reference: the [`configuration`](../configuration/SKILL.md) skill carries the typed-config principle; this skill carries the don't-duplicate-the-value-across-files check. Cross-reference: the [`types`](../types/SKILL.md) skill applies the same one-source rule to type definitions (schema and interface derived from one source via inference or codegen, not maintained in parallel). Cross-reference: the [`developer-experience`](../developer-experience/SKILL.md) skill carries the recipes-call-scripts discipline that prevents the same shell snippet duplicating across multiple task-runner targets.
 
 ### 6. Test fixtures are factored, not copy-pasted
 
@@ -67,6 +67,8 @@ This is knowledge-DRY: the fixture represents a domain object with invariants, n
 Sandi Metz's clarification: the wrong abstraction is far more expensive than duplication. When a candidate abstraction would force unrelated cases to share a shape they should not share, the right move is to inline it back and accept the duplicates. Signs that an abstraction is wrong: callers pass flags to opt out of the abstraction's behavior; the abstraction has special-case branches per caller; the abstraction's parameters are mostly used by one caller and ignored by the others.
 
 Inlining a wrong abstraction back into duplication is a refactoring, not a regression. It restores optionality the abstraction took away.
+
+Cross-reference: the [`developer-experience`](../developer-experience/SKILL.md) skill applies this rule to task-runner recipes: logic lives in scripts that are reusable from CI, other recipes, and the contributor's shell, so the same behavior is not duplicated across YAML or makefile bodies.
 
 ## Red Flags - STOP
 
@@ -169,6 +171,13 @@ These go stale fast; the date is the "as-of." Verify currency before adopting. T
 
 - **Duplication detection:** jscpd (cross-language), PMD's CPD (Java/JS/others), SonarQube duplication metrics, semgrep custom rules for cross-layer rule duplication. Useful as a smell-finder, not a verdict.
 - **Test-fixture factoring:** factory-boy / model-bakery (Python), faker plus a factory pattern (JS/TS), test-data builders (any language). The pattern matters more than the library.
-- **Configuration single-source:** a typed config module (Pydantic Settings, zod, viper, figment) read once and referred to everywhere; see the `configuration` lens for the broader discipline.
+- **Configuration single-source:** a typed config module (Pydantic Settings, zod, viper, figment) read once and referred to everywhere; see the [`configuration`](../configuration/SKILL.md) skill for the broader discipline.
 - **Magic-number naming:** language-native constant declarations; ESLint `no-magic-numbers` (with sensible thresholds) for the smell-detection pass.
 - **Refactoring discipline:** any modern IDE's extract-method, extract-variable, and inline refactorings make the rule-of-three move and the wrong-abstraction inline-back move equally cheap. The cost of inlining back must stay low for principle 7 to be practiced.
+
+## Continual improvement
+
+This skill is maintained at:
+https://github.com/syntropic137/software-leverage-points/blob/main/skills/dry/SKILL.md
+
+To improve it, edit the file directly and follow the chassis discipline in [`maintaining-software-leverage-points`](../../.claude/skills/maintaining-software-leverage-points/SKILL.md): regenerate catalogs, run `just qa`, then commit.

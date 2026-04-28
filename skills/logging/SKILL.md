@@ -33,7 +33,7 @@ A `print` (or `console.log`, `fmt.Println`, `System.out.println`) is a logger th
 
 Passwords, tokens, API keys, full request bodies, full headers (especially `Authorization`), and full SQL with bound parameters must be redacted before they reach the logger. Logs are often shipped to systems with weaker access control than the primary store; what you log is what you have leaked.
 
-Redact at the boundary, not at the sink: by the time a sink redacts, copies have already been written. Cross-reference: the `security` lens carries the sensitive-data classification and exfiltration-channel framing that names which fields require redaction here.
+Redact at the boundary, not at the sink: by the time a sink redacts, copies have already been written. Cross-reference: the [`security`](../security/SKILL.md) skill carries the sensitive-data classification and exfiltration-channel framing that names which fields require redaction here.
 
 ### 5. Correlation IDs propagate across hops (scope: distributed systems)
 
@@ -61,7 +61,7 @@ A log line is cheap to emit and expensive in aggregate. The discipline is to log
 - Entry and exit of subsystem or service boundaries (request handlers, queue consumers, scheduled jobs, public APIs of internal libraries).
 - State transitions (a record moved from `pending` to `processed`; a feature flag flipped; a circuit breaker opened).
 - Decisions the system made on the user's behalf (which provider was selected, which fallback fired, why a retry was skipped).
-- Error sites that catch and handle, with the cause chain attached. See the `error-handling` lens for how the error itself is structured.
+- Error sites that catch and handle, with the cause chain attached. See the [`error-handling`](../error-handling/SKILL.md) skill for how the error itself is structured.
 
 **Where not to log:** inside tight loops, per-iteration in batch processing (log once with a count), per-row of a query result, or anywhere the line is more frequent than the operator can read.
 
@@ -74,7 +74,7 @@ A log line is cheap to emit and expensive in aggregate. The discipline is to log
 
 The level policy named in principle 2 makes these definitions enforceable; this principle states the content discipline that makes the policy useful.
 
-Cross-reference: the `continuous-deployment` lens consumes these boundary emissions as the health and SLO signals that gate deploys and trigger automated rollback.
+Cross-reference: the [`continuous-delivery`](../continuous-delivery/SKILL.md) skill consumes these boundary emissions as the health and SLO signals that gate deploys and trigger automated rollback.
 
 ## Red Flags - STOP
 
@@ -200,3 +200,10 @@ These go stale fast; the date is the "as-of." Verify currency before adopting. T
 - **Tracing/correlation:** OpenTelemetry SDK for any stack; `traceparent` header (W3C Trace Context) as the canonical propagation format.
 - **Log aggregation/query:** Loki + Grafana, Honeycomb (events-first), Datadog, Splunk, Elastic. The choice is downstream; the principle is "logs are streams the environment routes."
 - **Redaction helpers:** project-local helpers calling out keys from a denylist; never trust regex-only redaction for high-stakes secrets.
+
+## Continual improvement
+
+This skill is maintained at:
+https://github.com/syntropic137/software-leverage-points/blob/main/skills/logging/SKILL.md
+
+To improve it, edit the file directly and follow the chassis discipline in [`maintaining-software-leverage-points`](../../.claude/skills/maintaining-software-leverage-points/SKILL.md): regenerate catalogs, run `just qa`, then commit.

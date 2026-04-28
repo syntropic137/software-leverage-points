@@ -71,9 +71,9 @@ The discipline is: zero for success, distinct non-zero codes for distinct failur
 
 Error messages are read by users, operators, support staff, and other systems. A useless message ("Something went wrong") is the difference between "user retries with a fix" and "user files a ticket"; between "operator restarts the right service" and "operator restarts everything." A message must name the entity, the operation, and the actionable next step.
 
-Cross-reference: the `security` lens carries the "do not concatenate user input into error messages" check; this lens carries the "messages are a contract" framing.
+Cross-reference: the [`security`](../security/SKILL.md) skill carries the "do not concatenate user input into error messages" check; this skill carries the "messages are a contract" framing.
 
-Cross-reference: errors are emitted at error boundaries through the project's logger, structured per the `logging` lens, with the cause chain (principle 5) attached as fields rather than flattened into a string. The boundary log line is where the typed taxonomy, the preserved cause, and the actionable message become a queryable event for operators and agent reviewers. See `logging` principle 8 ("log at the seams") for where these emissions belong.
+Cross-reference: errors are emitted at error boundaries through the project's logger, structured per the [`logging`](../logging/SKILL.md) skill, with the cause chain (principle 5) attached as fields rather than flattened into a string. The boundary log line is where the typed taxonomy, the preserved cause, and the actionable message become a queryable event for operators and agent reviewers. See `logging` principle 8 ("log at the seams") for where these emissions belong.
 
 ## Red Flags - STOP
 
@@ -86,7 +86,7 @@ Cross-reference: errors are emitted at error boundaries through the project's lo
 - Re-raising loses the original cause: `raise NewError("wrapped")` without `from e`; `fmt.Errorf("...: %v", err)` instead of `%w`; `throw new Error("wrapped: " + e.message)` that drops the stack
 - CLI returns the same exit code for distinct failure modes; CI cannot dispatch
 - Error message says "Something went wrong" without the something: no entity, no operation, no actionable next step
-- Error string built from unsanitized user input (cross-reference: `security` lens)
+- Error string built from unsanitized user input (cross-reference: [`security`](../security/SKILL.md) skill)
 
 ## Rationalization Prevention
 
@@ -159,7 +159,7 @@ With typed-and-deliberate error handling:
 - Users and operators see actionable messages; tickets and pages drop in volume.
 - CI pipelines dispatch on exit code; the dispatch survives upgrades and translations.
 
-**Error handling is also an agent-facing feedback channel.** As LLM-driven test, review, and debugging agents become a regular part of the development loop, typed errors with structured fields and preserved cause chains are how those agents diagnose failures from logs alone, without re-running the system. A `NotFoundError(entity="user", id=...)` with its cause chain intact is a queryable event; a stringified "something went wrong" is opaque prose the agent must guess at. Codebases whose errors are typed, propagated deliberately, and logged structurally at the boundary (see `logging` lens) are codebases where an agent can reconstruct what failed and why from the runtime trace, instead of re-running the failing scenario to learn what the code already knew.
+**Error handling is also an agent-facing feedback channel.** As LLM-driven test, review, and debugging agents become a regular part of the development loop, typed errors with structured fields and preserved cause chains are how those agents diagnose failures from logs alone, without re-running the system. A `NotFoundError(entity="user", id=...)` with its cause chain intact is a queryable event; a stringified "something went wrong" is opaque prose the agent must guess at. Codebases whose errors are typed, propagated deliberately, and logged structurally at the boundary (see [`logging`](../logging/SKILL.md) skill) are codebases where an agent can reconstruct what failed and why from the runtime trace, instead of re-running the failing scenario to learn what the code already knew.
 
 ## Growth examples
 
@@ -193,6 +193,13 @@ These go stale fast; the date is the "as-of." Verify currency before adopting. T
 - **Typed errors:** Rust `thiserror` and `anyhow`; Python's `dataclass`-based exception hierarchies; TypeScript discriminated unions and `neverthrow` or `Effect`; Go's `errors.Is`/`errors.As` for typed-error inspection; Scala's ADTs and Cats `Either`.
 - **Retry libraries:** tenacity (Python), retry / async-retry (JS/TS), backoff (Go), failsafe (Java), Polly (.NET). Pick one and centralize the policy; do not scatter ad-hoc retry loops.
 - **Circuit breakers:** resilience4j (JVM), Polly (.NET), opossum (JS/TS), Hystrix-historical and its Go and Python successors. Useful at boundaries with brownout history.
-- **Error reporting and aggregation:** Sentry, Bugsnag, Rollbar, Honeybadger for application-level error capture; structured-logging integration (see `logging` lens) feeds the same channel.
+- **Error reporting and aggregation:** Sentry, Bugsnag, Rollbar, Honeybadger for application-level error capture; structured-logging integration (see [`logging`](../logging/SKILL.md) skill) feeds the same channel.
 - **Exit-code discipline:** language-native; document codes in `--help`. The sysexits.h table is a sensible starting taxonomy for CLI tools.
 - **Idempotency keys:** native to many cloud APIs (Stripe, AWS); for self-built services, a simple table of (key, request-hash, result) keyed on a client-supplied UUID is the production-grade pattern.
+
+## Continual improvement
+
+This skill is maintained at:
+https://github.com/syntropic137/software-leverage-points/blob/main/skills/error-handling/SKILL.md
+
+To improve it, edit the file directly and follow the chassis discipline in [`maintaining-software-leverage-points`](../../.claude/skills/maintaining-software-leverage-points/SKILL.md): regenerate catalogs, run `just qa`, then commit.

@@ -11,7 +11,7 @@ Complexity is the dominant force in long-lived software. Done well, complexity i
 
 **Core principle:** Treat complexity as a budget. Pay it deliberately for behavior the system actually needs. Refuse to pay it for speculative flexibility, decorative abstraction, or convenience for the rare case at the expense of the common one.
 
-> **Lens cross-reference.** A peer reference doc lives at `../software-leverage-review/references/software-complexity.md` for the orchestrator's synthesis pass. This SKILL.md presents the same lens in the principle-doc shape; the two artifacts share content but serve different audiences.
+> **Skill cross-reference.** A peer reference doc lives at `../software-leverage-review/references/software-complexity.md` for the orchestrator's synthesis pass. This SKILL.md presents the principle-doc shape; the two artifacts share content but serve different audiences.
 
 ## Core Principles
 
@@ -70,6 +70,29 @@ The principle is: when reviewing, state the framing being used and the reasoning
 When a comment restates the next statement ("// increment counter"), it adds nothing the code did not already say, and it rots when the code changes. Comments earn their keep by capturing the *why*: the non-obvious decision, the reason this branch exists, the reference to the upstream issue, the explanation of a constraint that is not local to this code.
 
 The code itself should answer the *what* via clear naming. When naming cannot carry the meaning, the comment-as-name is a signal to rename, not to comment harder.
+
+### 8. Maintenance cost dominates; design for the long term
+
+Kanat-Alexander's **equation of software design** makes the cost trade explicit:
+
+```
+Desirability = (Value Now + Value Future) / (Effort Implementation + Effort Maintenance)
+```
+
+A change is worth making in proportion to its current and future value, divided by the effort to implement it and to maintain it. As a system ages, `Value Now` and `Effort Implementation` are paid once; `Value Future` and `Effort Maintenance` are paid every time the code is read, modified, or extended. Over a long-lived codebase the equation reduces to:
+
+```
+Desirability ≈ Value Future / Effort Maintenance
+```
+
+The practical inversion: **reducing maintenance cost matters more than reducing implementation cost**. A shortcut that ships in a day and costs a week of debugging across the next year has paid the wrong tax. Four supporting laws make the trade specific:
+
+- **Law of Change.** The longer a program exists, the more probable it is that any piece of it will have to change.
+- **Law of Defect Probability.** The chance of introducing a defect is proportional to the size of the change.
+- **Law of Simplicity.** The ease of maintenance is proportional to the simplicity of the individual pieces.
+- **Law of Testing.** The degree to which you know your software behaves is the degree to which you have accurately tested it.
+
+Together they motivate the rest of this skill: deep modules, bounded complexity, orthogonality, and the rule of three are not aesthetic preferences; they are the levers that reduce the maintenance term. Cross-reference: the [`testing`](../testing/SKILL.md) skill carries the operational form of the Law of Testing; the [`principles-and-patterns`](../principles-and-patterns/SKILL.md) skill carries the stewardship discipline (Broken Windows, Boy Scout Rule, managed technical debt) that prevents the maintenance cost from compounding silently between principled refactors.
 
 ## Red Flags - STOP
 
@@ -166,6 +189,7 @@ Soft sketch; not a checklist. Where appropriate is shaped by the target's maturi
 - **Andy Hunt and Dave Thomas, *The Pragmatic Programmer* (1999, 2019).** Backs principle 3 (orthogonality) and principle 7 (self-documenting code). The orthogonality discipline as the operational form of "don't accidentally couple things."
 - **Martin Fowler, *Refactoring* (1999, 2018).** Backs principle 4 (rule of three) and principle 7 ("Comments" smell). The catalog of mechanical refactors that keep complexity discipline cheap to practice.
 - **Sandi Metz, "The Wrong Abstraction" (RailsConf 2016).** Backs principle 4 (the inline-back corollary). The canonical statement that duplication is far cheaper than the wrong abstraction.
+- **Max Kanat-Alexander, *Code Simplicity* (2012).** Backs principle 8 (the equation of software design and the four laws of change, defect probability, simplicity, and testing). The cleanest articulation of why maintenance cost dominates over implementation cost in long-lived systems.
 
 ## Suggested technologies (as of 2026-04-28)
 
@@ -176,3 +200,10 @@ These go stale fast; the date is the "as-of." Verify currency before adopting. T
 - **Module-shape and coupling analysis:** dependency-cruiser (JS/TS), import-linter (Python), ArchUnit (Java/Kotlin), structurizr for design-time. Surface accidental coupling and layer-direction violations.
 - **Refactoring tooling:** any modern IDE's extract-method, extract-variable, inline-method, and rename refactorings. The cost of inlining a wrong abstraction back must stay low for principle 4 to be practiced.
 - **Visualization:** code-charta, codescene for hot-spot complexity overlay. Useful for picking which complexity to pay down first, not for setting bounds.
+
+## Continual improvement
+
+This skill is maintained at:
+https://github.com/syntropic137/software-leverage-points/blob/main/skills/software-complexity/SKILL.md
+
+To improve it, edit the file directly and follow the chassis discipline in [`maintaining-software-leverage-points`](../../.claude/skills/maintaining-software-leverage-points/SKILL.md): regenerate catalogs, run `just qa`, then commit.

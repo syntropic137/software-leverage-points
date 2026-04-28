@@ -3,13 +3,15 @@
 #
 # An SLP "A" references SLP "B" when A's SKILL.md uses one of the canonical
 # cross-reference forms:
-#   `B` lens          (the standard prose cross-link phrasing)
-#   `B` SLP           (alternative phrasing)
-#   skills/B/         (path reference, e.g. in a markdown link target)
+#   `B` skill         (the current canonical phrasing)
+#   `B` lens          (legacy phrasing; kept for transition)
+#   `B` SLP           (legacy phrasing; kept for transition)
+#   skills/B/         (absolute-style path reference)
+#   ../B/SKILL.md     (relative-link path; only the SKILL.md target counts)
 #
-# A bare backtick mention `B` without "lens" or "SLP" is treated as a topical
-# mention, not a cross-reference, to avoid false positives from SLPs listing
-# concerns by name without intending a cross-link.
+# A bare backtick mention `B` without one of those suffixes is treated as a
+# topical mention, not a cross-reference, to avoid false positives from SLPs
+# listing concerns by name without intending a cross-link.
 #
 # When A -> B exists but B -> A does not, the relationship is asymmetric and
 # this script reports the missing back-edge. It does not auto-fix; the author
@@ -45,7 +47,7 @@ for a in "${SLPS[@]}"; do
   [[ -f "$src" ]] || continue
   for b in "${SLPS[@]}"; do
     [[ "$a" == "$b" ]] && continue
-    if grep -qE "(\`$b\` (lens|SLP)|skills/$b/)" "$src"; then
+    if grep -qE "(\`$b\` (skill|lens|SLP)|skills/$b/|\.\./$b/SKILL\.md)" "$src"; then
       printf '%s %s\n' "$a" "$b" >> "$EDGES"
     fi
   done

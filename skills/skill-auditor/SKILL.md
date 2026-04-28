@@ -71,3 +71,10 @@ The "why" behind a drift-detection skill at all:
 - **Reference-link integrity as a symptom.** Broken links signal renames or moves that the rest of the docs missed. Cite: Nygard's ADR practice and the related "links should resolve" hygiene rule.
 
 A future enhancement: this skill could ship a `scripts/audit.sh` that runs a subset of the cross-doc checks deterministically (count-the-LPs grep, link-check). For now, the SKILL.md is the contract; an autonomous agent applies it manually.
+
+## Continual improvement
+
+This skill is maintained at:
+https://github.com/syntropic137/software-leverage-points/blob/main/skills/skill-auditor/SKILL.md
+
+To improve it, edit the file directly and follow the chassis discipline in [`maintaining-software-leverage-points`](../../.claude/skills/maintaining-software-leverage-points/SKILL.md): regenerate catalogs, run `just qa`, then commit.

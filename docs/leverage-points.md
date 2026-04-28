@@ -17,14 +17,13 @@ Operator skills are excluded from the default `software-leverage-review` fan-out
 <!-- end:operator-catalog -->
 
 <!-- begin:slp-catalog -->
-## Leverage-point skills (18)
+## Leverage-point skills (17)
 
 | LP | Status |
 |---|---|
 | architecture | shipped (v0.1) |
 | configuration | shipped (v0.1) |
-| continuous-deployment | shipped (v0.1) |
-| continuous-integration | shipped (v0.1) |
+| continuous-delivery | shipped (v0.1) |
 | dependencies | shipped (v0.1) |
 | developer-experience | shipped (v0.1) |
 | documentation | shipped (v0.1) |

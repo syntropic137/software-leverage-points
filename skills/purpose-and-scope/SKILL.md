@@ -11,6 +11,8 @@ A project's purpose is the anchor that every plan, PR, and dependency hangs from
 
 **Core principle:** Purpose is stated in one canonical place, non-goals are stated alongside goals, and every plan or PR traces back to the stated purpose. Scope changes get the same explicit decision capture as architecture changes.
 
+The deeper anchor, from Kanat-Alexander: **software exists to help people**. Every line that does not serve a stated user need is waste, and the cheapest place to refuse waste is at the scope decision before code is written. The non-goals list is the operational form of that refusal.
+
 ## Core Principles
 
 ### 1. The project has a stated purpose document (scope: projects with multiple contributors or external users)
@@ -43,7 +45,7 @@ When the scope applies: one PR per axis of change. A PR titled "fix login bug" s
 
 A dependency is a permanent commitment and a supply-chain surface. Adding one without a purpose-link justification ("we needed X" with no reference to which user-facing or stated-purpose need it serves) drifts the project toward tool-of-the-week syndrome and bloats the dependency graph reviewers must reason about.
 
-Cross-reference: see the `dependencies` lens for supply-chain cost; this lens carries the purpose-linkage check.
+Cross-reference: see the [`dependencies`](../dependencies/SKILL.md) skill for supply-chain cost; this skill carries the purpose-linkage check.
 
 ### 6. Project-level bounded contexts are honored (scope: multi-context systems)
 
@@ -150,6 +152,7 @@ Soft sketch; not a checklist. Where appropriate is shaped by the target's maturi
 - **Eric Evans, *Domain-Driven Design* (2003), strategic patterns.** Backs principle 6 (project-level bounded contexts). Strategic context boundaries are deliberate decisions; crossing one deserves explicit capture.
 - **Michael Nygard, ADR practice.** Backs principle 7 (scope-change capture). Architecture Decision Records generalize from architecture to scope: any consequential decision deserves the same lightweight capture format.
 - **Andrew Gallant ("burntsushi") `PROJECT.md` conventions.** Backs principles 1 and 2. Canonical examples in popular Rust projects of explicit goals-and-non-goals documentation alongside the README.
+- **Max Kanat-Alexander, *Code Simplicity* (2012).** Backs the core principle and Why This Matters framing. "The purpose of software is to help people"; complexity, unneeded features, and unanchored work are waste, and the scope decision is the leverage point for refusing them.
 
 ## Suggested technologies (as of 2026-04-28)
 
@@ -160,3 +163,10 @@ These go stale fast; the date is the "as-of." Verify currency before adopting. T
 - **Non-goals format:** an explicit "Non-goals:" bulleted list in the purpose document; periodically reviewed when a scope expansion is proposed.
 - **PR-size threshold:** a stated number (commonly 200-400 lines changed across non-generated files) plus a CI advisory or PR template line that prompts authors to decompose larger changes.
 - **Scope-decision capture:** ADRs in `docs/adr/` (or `docs/decisions/`); PR description templates that include "scope" and "out of scope" sections; commit-message conventions (Conventional Commits) that surface scope-expansion intent.
+
+## Continual improvement
+
+This skill is maintained at:
+https://github.com/syntropic137/software-leverage-points/blob/main/skills/purpose-and-scope/SKILL.md
+
+To improve it, edit the file directly and follow the chassis discipline in [`maintaining-software-leverage-points`](../../.claude/skills/maintaining-software-leverage-points/SKILL.md): regenerate catalogs, run `just qa`, then commit.

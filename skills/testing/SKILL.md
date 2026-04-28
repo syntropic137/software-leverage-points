@@ -41,7 +41,7 @@ Unit tests should be:
 
 Integration and end-to-end tests inherit Independent, Repeatable, and Self-validating. Fast and Timely apply less strictly: integration tests deliberately accept some setup cost in exchange for verifying real boundaries, and E2E tests are written after the integration surface stabilizes.
 
-Cross-reference: the `continuous-integration` lens carries the pre-merge gate, sub-10-minute feedback budget, and flake-quarantine policy that turn a maintained test suite into the always-green invariant downstream practices ride on.
+Cross-reference: the [`continuous-delivery`](../continuous-delivery/SKILL.md) skill carries the pre-merge gate, sub-10-minute feedback budget, and flake-quarantine policy that turn a maintained test suite into the always-green invariant downstream practices ride on. Cross-reference: the [`types`](../types/SKILL.md) skill carries the static side of the same fast-feedback discipline; a strong type system eliminates whole categories of test that would otherwise be needed. Cross-reference: the [`developer-experience`](../developer-experience/SKILL.md) skill carries the recipes-call-scripts discipline that keeps task-runner glue testable here rather than buried inline in a justfile.
 
 ### 4. Test-driven development (when feasible)
 
@@ -66,6 +66,8 @@ Every bug fix starts with a failing test that reproduces the bug. Then fix. Then
 
 Don't fix without first writing the failing test.
 
+Cross-reference: the [`principles-and-patterns`](../principles-and-patterns/SKILL.md) skill carries the stewardship discipline (Boy Scout Rule, Broken Windows, technical debt as a managed quantity); a green regression suite is the precondition that lets debt be paid down by refactoring without fear. Cross-reference: the [`software-complexity`](../software-complexity/SKILL.md) skill carries the cost framing (maintenance dominates implementation) that explains why the regression-test investment pays back over a long-lived codebase.
+
 ### 6. Readability via patterns
 
 Each test states intent first, then exercises behavior, then asserts. Use Given/When/Then (BDD) or Arrange/Act/Assert or Build/Operate/Check. Extract setup into reusable factories or fixtures. Tests that read like prose make refactoring safer because the intent survives implementation changes.
@@ -78,6 +80,8 @@ Tests should be discoverable from the code they test. Two layouts both work; bot
 - **Co-location:** tests sit next to the code under test. `src/auth/login.py` and `src/auth/login.test.ts` (or `login_test.go`) in the same directory. Reduces the cognitive cost of switching between subject and test; surfaces missing tests by their absence.
 
 Pick one convention and stay consistent within a project. Mixing without a stated rule fragments discoverability and erodes the value either approach offers.
+
+Cross-reference: the [`developer-experience`](../developer-experience/SKILL.md) skill carries the recipes-call-scripts discipline; those scripts are testable code and inherit the rules above.
 
 ## Red Flags - STOP
 
@@ -183,3 +187,10 @@ These go stale fast; the date is the "as-of." Verify currency before adopting. T
 - **Go:** standard testing, testify, gopter (property-based).
 - **End-to-end (any stack):** Playwright is the canonical browser E2E framework; framework-agnostic and supports TypeScript, Python, Java, .NET.
 - **Cross-language:** mutation testing as the ceiling discipline; formal coverage gates in CI; property-based testing for invariants that resist enumeration.
+
+## Continual improvement
+
+This skill is maintained at:
+https://github.com/syntropic137/software-leverage-points/blob/main/skills/testing/SKILL.md
+
+To improve it, edit the file directly and follow the chassis discipline in [`maintaining-software-leverage-points`](../../.claude/skills/maintaining-software-leverage-points/SKILL.md): regenerate catalogs, run `just qa`, then commit.

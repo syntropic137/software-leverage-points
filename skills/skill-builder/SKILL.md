@@ -36,7 +36,7 @@ Each generated L2 SKILL.md MUST include, in order:
 1. Frontmatter and the L1 backlink line.
 2. `## Repo Context`: facts inspected from the target.
 3. `## Maturity Assessment`: current level (POC, growing, stable, legacy, safety-critical), the signals the assessment is based on, and the date last reviewed.
-4. `## Growth Direction`: the natural next step for this lens, the trigger that would force the step, and what is premature at this maturity.
+4. `## Growth Direction`: the natural next step for this skill, the trigger that would force the step, and what is premature at this maturity.
 5. `## Repo-Specific Checks`: tailored to the stack, **calibrated to the maturity assessment** (next-step checks emit as `info`, current-level hygiene as `warn`, current-level production blockers as `error`).
 6. `## Workflow`: defers to L1 for principles, emits findings per L1's output schema.
 
@@ -55,3 +55,10 @@ Maturity Assessment + Growth Direction are what `skill-auditor` later inspects f
 ## References
 
 - `prompt_template-one-skill.md` (subagent prompt)
+
+## Continual improvement
+
+This skill is maintained at:
+https://github.com/syntropic137/software-leverage-points/blob/main/skills/skill-builder/SKILL.md
+
+To improve it, edit the file directly and follow the chassis discipline in [`maintaining-software-leverage-points`](../../.claude/skills/maintaining-software-leverage-points/SKILL.md): regenerate catalogs, run `just qa`, then commit.
