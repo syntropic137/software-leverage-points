@@ -85,20 +85,20 @@ operator_purpose() {
 # Build the three table blocks.
 # -----------------------------------------------------------------------------
 build_operator_table() {
-  printf '| Skill | Status | Purpose |\n'
-  printf '|---|---|---|\n'
+  printf '| Skill | Purpose |\n'
+  printf '|---|---|\n'
   for op in "${SORTED_OPERATORS[@]}"; do
-    printf '| [`%s`](../skills/%s/SKILL.md) | shipped (v0.1) | %s |\n' "$op" "$op" "$(operator_purpose "$op")"
+    printf '| [`%s`](../skills/%s/SKILL.md) | %s |\n' "$op" "$op" "$(operator_purpose "$op")"
   done
 }
 
 build_slp_table() {
   local count=${#SORTED_SLPS[@]}
   printf '## Leverage-point skills (%s)\n\n' "$count"
-  printf '| LP | Status |\n'
-  printf '|---|---|\n'
+  printf '| LP |\n'
+  printf '|---|\n'
   for slp in "${SORTED_SLPS[@]}"; do
-    printf '| [%s](../skills/%s/SKILL.md) | shipped (v0.1) |\n' "$slp" "$slp"
+    printf '| [%s](../skills/%s/SKILL.md) |\n' "$slp" "$slp"
   done
 }
 

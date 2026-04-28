@@ -49,31 +49,43 @@ Multi-vendor scaffolding patterns adapted from [obra/superpowers](https://github
 
 This plugin has been developed against `obra/superpowers` at HEAD as of 2026-04-27. The two plugins compose at runtime via vendor-native plugin discovery; no version pin is enforced today. If superpowers introduces breaking changes to its scaffolding conventions, this plugin's `upstream` git remote (pinned to `obra/superpowers`) makes selectively merging only the scaffolding changes straightforward. Skill compatibility is informal: this plugin invokes `superpowers:brainstorming`, `superpowers:writing-plans`, `superpowers:subagent-driven-development`, and `superpowers:writing-skills` by name. Breaking changes to those skills' descriptions or interfaces will require this plugin's docs to be updated.
 
-## Status
-
-v0.1.0 (alpha). The leverage-point skills, operator skills, and lens reference docs are catalogued at `docs/leverage-points.md`. Four evals run: the three orchestrator runs scored upward on the 12-point rubric (10/12, 11/12, 12/12), and eval-004 is a single-skill `skill-auditor` self-audit (Specificity 3/3; the other rubric dimensions do not apply to a single-skill run). See `MIGRATION.md` for the migration plan and `docs/evals/` for evidence.
-
 ## Install
 
 This README is the explanation layer: mental model, rationale, and install instructions. The reference inventory of all shipped skills lives in `docs/leverage-points.md`. How-to guides for individual skills live in each skill's own `SKILL.md`. The split follows Diátaxis (explanation, how-to, reference) so each document has one job.
 
-This plugin runs alongside `obra/superpowers`. Install both:
+This plugin composes with [`obra/superpowers`](https://github.com/obra/superpowers); install both for the full workflow.
 
 ### Claude Code
 
+**From GitHub (marketplace):**
+
 ```bash
-claude --plugin-dir /path/to/software-leverage-points --plugin-dir /path/to/superpowers
+claude plugin marketplace add syntropic137/software-leverage-points && claude plugin install software-leverage-points
 ```
 
-For other vendors, see:
-- Codex: `docs/README.codex.md`
-- OpenCode: `docs/README.opencode.md`
+**From local clone (development):**
+
+```bash
+claude plugin install /absolute/path/to/software-leverage-points --scope project
+```
+
+See [`docs/local-testing.md`](docs/local-testing.md) for the full local-development loop (persistent install, ephemeral install, `/reload-plugins`).
+
+### Other vendors
+
+- Codex: [`docs/README.codex.md`](docs/README.codex.md)
+- OpenCode: [`docs/README.opencode.md`](docs/README.opencode.md)
 - Cursor: `.cursor-plugin/plugin.json` describes the plugin to Cursor's plugin loader
 - Gemini: `gemini-extension.json` registers the extension
 
-### Marketplace install (future)
+### Updating
 
-A `.claude-plugin/marketplace.json` listing is planned for v0.2.
+```bash
+claude plugin marketplace update software-leverage-points
+claude plugin update software-leverage-points@syntropic137
+```
+
+Refreshing the marketplace catalog before the plugin update ensures the cache has the latest release before the install runs.
 
 ## Skills
 
@@ -123,15 +135,10 @@ Examples:
 ```bash
 git clone https://github.com/syntropic137/software-leverage-points
 cd software-leverage-points
-
-# Test locally without installing
-claude --plugin-dir $(pwd)
+claude plugin install $(pwd) --scope project
 ```
 
-Run alongside superpowers (recommended):
-```bash
-claude --plugin-dir $(pwd) --plugin-dir /path/to/superpowers
-```
+See [`docs/local-testing.md`](docs/local-testing.md) for the full development loop.
 
 ## Project rules
 
