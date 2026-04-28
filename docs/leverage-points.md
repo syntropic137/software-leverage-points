@@ -11,9 +11,9 @@ Operator skills are excluded from the default `software-leverage-review` fan-out
 <!-- begin:operator-catalog -->
 | Skill | Status | Purpose |
 |---|---|---|
-| `software-leverage-review` | shipped (v0.1) | Orchestrator: fans out subagents per leverage point, synthesizes findings using lens references |
-| `skill-builder` | shipped (v0.1) | Bootstrap repo-specific (L2) skills from generic (L1) meta-skills, customized per repo's stack |
-| `skill-auditor` | shipped (v0.1) | Detect drift between L2 skills and current code/docs; flag the kind of cross-doc inconsistency the evals keep finding |
+| [`software-leverage-review`](../skills/software-leverage-review/SKILL.md) | shipped (v0.1) | Orchestrator: fans out subagents per leverage point, synthesizes findings using lens references |
+| [`skill-builder`](../skills/skill-builder/SKILL.md) | shipped (v0.1) | Bootstrap repo-specific (L2) skills from generic (L1) meta-skills, customized per repo's stack |
+| [`skill-auditor`](../skills/skill-auditor/SKILL.md) | shipped (v0.1) | Detect drift between L2 skills and current code/docs; flag the kind of cross-doc inconsistency the evals keep finding |
 <!-- end:operator-catalog -->
 
 <!-- begin:slp-catalog -->
@@ -21,23 +21,23 @@ Operator skills are excluded from the default `software-leverage-review` fan-out
 
 | LP | Status |
 |---|---|
-| architecture | shipped (v0.1) |
-| configuration | shipped (v0.1) |
-| continuous-delivery | shipped (v0.1) |
-| dependencies | shipped (v0.1) |
-| developer-experience | shipped (v0.1) |
-| documentation | shipped (v0.1) |
-| dry | shipped (v0.1) |
-| environments | shipped (v0.1) |
-| error-handling | shipped (v0.1) |
-| logging | shipped (v0.1) |
-| principles-and-patterns | shipped (v0.1) |
-| purpose-and-scope | shipped (v0.1) |
-| security | shipped (v0.1) |
-| software-complexity | shipped (v0.1) |
-| testing | shipped (v0.1) |
-| types | shipped (v0.1) |
-| versioning | shipped (v0.1) |
+| [architecture](../skills/architecture/SKILL.md) | shipped (v0.1) |
+| [configuration](../skills/configuration/SKILL.md) | shipped (v0.1) |
+| [continuous-delivery](../skills/continuous-delivery/SKILL.md) | shipped (v0.1) |
+| [dependencies](../skills/dependencies/SKILL.md) | shipped (v0.1) |
+| [developer-experience](../skills/developer-experience/SKILL.md) | shipped (v0.1) |
+| [documentation](../skills/documentation/SKILL.md) | shipped (v0.1) |
+| [dry](../skills/dry/SKILL.md) | shipped (v0.1) |
+| [environments](../skills/environments/SKILL.md) | shipped (v0.1) |
+| [error-handling](../skills/error-handling/SKILL.md) | shipped (v0.1) |
+| [logging](../skills/logging/SKILL.md) | shipped (v0.1) |
+| [principles-and-patterns](../skills/principles-and-patterns/SKILL.md) | shipped (v0.1) |
+| [purpose-and-scope](../skills/purpose-and-scope/SKILL.md) | shipped (v0.1) |
+| [security](../skills/security/SKILL.md) | shipped (v0.1) |
+| [software-complexity](../skills/software-complexity/SKILL.md) | shipped (v0.1) |
+| [testing](../skills/testing/SKILL.md) | shipped (v0.1) |
+| [types](../skills/types/SKILL.md) | shipped (v0.1) |
+| [versioning](../skills/versioning/SKILL.md) | shipped (v0.1) |
 <!-- end:slp-catalog -->
 
 ## Lens reference docs

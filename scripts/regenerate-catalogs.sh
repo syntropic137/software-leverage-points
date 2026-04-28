@@ -88,7 +88,7 @@ build_operator_table() {
   printf '| Skill | Status | Purpose |\n'
   printf '|---|---|---|\n'
   for op in "${SORTED_OPERATORS[@]}"; do
-    printf '| `%s` | shipped (v0.1) | %s |\n' "$op" "$(operator_purpose "$op")"
+    printf '| [`%s`](../skills/%s/SKILL.md) | shipped (v0.1) | %s |\n' "$op" "$op" "$(operator_purpose "$op")"
   done
 }
 
@@ -98,7 +98,7 @@ build_slp_table() {
   printf '| LP | Status |\n'
   printf '|---|---|\n'
   for slp in "${SORTED_SLPS[@]}"; do
-    printf '| %s | shipped (v0.1) |\n' "$slp"
+    printf '| [%s](../skills/%s/SKILL.md) | shipped (v0.1) |\n' "$slp" "$slp"
   done
 }
 
@@ -117,9 +117,9 @@ build_readme_slp_list() {
     desc=""
     [[ -f "$src" ]] && desc=$(extract_description "$src")
     if [[ -n "$desc" ]]; then
-      printf -- '- **%s**: %s\n' "$slp" "$desc"
+      printf -- '- **[%s](skills/%s/SKILL.md)**: %s\n' "$slp" "$slp" "$desc"
     else
-      printf -- '- **%s**\n' "$slp"
+      printf -- '- **[%s](skills/%s/SKILL.md)**\n' "$slp" "$slp"
     fi
   done
 }
