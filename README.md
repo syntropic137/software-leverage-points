@@ -24,7 +24,7 @@ This plugin has been developed against `obra/superpowers` at HEAD as of 2026-04-
 
 ## Status
 
-v0.1.0 (alpha). 18 leverage-point skills shipped, 2 operator skills (`software-leverage-review`, `skill-builder`), 3 lens reference docs. Three evals run with scores trending upward (10/12, 11/12, 12/12) as the citation discipline and lens coverage matured. See `MIGRATION.md` for the migration plan and `docs/evals/` for evidence.
+v0.1.0 (alpha). 18 leverage-point skills shipped, 3 operator skills (`software-leverage-review`, `skill-builder`, `skill-auditor`), 3 lens reference docs. Three evals run with scores trending upward (10/12, 11/12, 12/12) as the citation discipline and lens coverage matured. See `MIGRATION.md` for the migration plan and `docs/evals/` for evidence.
 
 ## Install
 
