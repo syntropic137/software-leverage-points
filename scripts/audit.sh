@@ -157,6 +157,17 @@ else
 fi
 
 # -----------------------------------------------------------------------------
+# Check 5: Backlink symmetry across SLP cross-references.
+# -----------------------------------------------------------------------------
+if bash scripts/check-backlinks.sh > /tmp/audit-backlinks.out 2>&1; then
+  note_ok "$(tail -1 /tmp/audit-backlinks.out)"
+else
+  note_fail "asymmetric SLP cross-references found:"
+  cat /tmp/audit-backlinks.out
+fi
+rm -f /tmp/audit-backlinks.out
+
+# -----------------------------------------------------------------------------
 # Summary.
 # -----------------------------------------------------------------------------
 if [[ "$FAIL" -eq 0 ]]; then
