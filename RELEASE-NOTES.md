@@ -45,3 +45,9 @@ Multi-vendor scaffolding patterns and structural conventions adapted from [obra/
 - A real eval against an external project's PR diff (eval-006). (eval-005 shipped: external whole-skill target with substantive code; PR-diff target moved to eval-006.)
 - Scripted version of the auditor's checks (`scripts/audit.sh`) for CI integration: in progress (script authored; runs the cross-doc, version, link, and em-dash checks deterministically).
 - Skill quality cleanup from eval-005 lessons (Milestone 3.2): SSRF (OWASP A10) and hand-rolled-escape red flags added to `security`; opaque binary-lockfile red flag added to `dependencies`; `versioning` and `logging` `When NOT to Use` scopes refined to route private/CLI cases to the right LP.
+- Maturity-awareness across the operator skills (Phase 2 Stream B): in progress.
+  - `software-leverage-review` calibrates finding severity to the target's maturity stage (POC, growing, production, safety-critical) and accepts an optional `maturity_hint` input. The fan-out subagent prompt threads `MATURITY_STAGE` so per-LP reviews calibrate at fan-out time, not just synthesis.
+  - `skill-builder` now emits L2 SKILL.md files with explicit `Maturity Assessment` and `Growth Direction` sections; Repo-Specific Checks are calibrated to the assessed stage.
+  - `skill-auditor` detects maturity drift: warns when the assessed level lags actual signals, surfaces info findings when a documented growth trigger has fired without the next step being addressed, and flags stale `Last reviewed` timestamps.
+- L1/L2/L3 mental-model diagram landed in `README.md` (Phase 2 Stream B): visualizes how skill-builder reads L1 + inspects the target to produce L2, how software-leverage-review fans out L3 reviews against L2, and how skill-auditor closes the loop by feeding drift back to L2.
+- Phase 2 Stream A (in-flight separately): qualitative refinement of the 18 L1 leverage-point skills based on user-feedback and growth examples.
