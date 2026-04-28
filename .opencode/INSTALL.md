@@ -10,7 +10,7 @@ Add software-leverage-points to the `plugin` array in your `opencode.json` (glob
 
 ```json
 {
-  "plugin": ["software-leverage-points@git+https://github.com/NeuralEmpowerment/software-leverage-points.git"]
+  "plugin": ["software-leverage-points@git+https://github.com/syntropic137/software-leverage-points.git"]
 }
 ```
 
@@ -35,7 +35,7 @@ To pin a specific version:
 
 ```json
 {
-  "plugin": ["software-leverage-points@git+https://github.com/NeuralEmpowerment/software-leverage-points.git#v0.1.0"]
+  "plugin": ["software-leverage-points@git+https://github.com/syntropic137/software-leverage-points.git#v0.1.0"]
 }
 ```
 
@@ -62,5 +62,5 @@ When skills reference Claude Code tools:
 
 ## Getting Help
 
-- Report issues: https://github.com/NeuralEmpowerment/software-leverage-points/issues
-- Full documentation: https://github.com/NeuralEmpowerment/software-leverage-points/blob/main/docs/README.opencode.md
+- Report issues: https://github.com/syntropic137/software-leverage-points/issues
+- Full documentation: https://github.com/syntropic137/software-leverage-points/blob/main/docs/README.opencode.md

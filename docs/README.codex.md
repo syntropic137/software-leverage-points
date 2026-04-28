@@ -9,7 +9,7 @@ Scaffolding patterns adapted from [obra/superpowers](https://github.com/obra/sup
 Tell Codex:
 
 ```
-Fetch and follow instructions from https://raw.githubusercontent.com/NeuralEmpowerment/software-leverage-points/refs/heads/main/.codex/INSTALL.md
+Fetch and follow instructions from https://raw.githubusercontent.com/syntropic137/software-leverage-points/refs/heads/main/.codex/INSTALL.md
 ```
 
 ## Manual Installation
@@ -23,7 +23,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/NeuralEmpow
 
 1. Clone the repo:
    ```bash
-   git clone https://github.com/NeuralEmpowerment/software-leverage-points.git ~/.codex/software-leverage-points
+   git clone https://github.com/syntropic137/software-leverage-points.git ~/.codex/software-leverage-points
    ```
 
 2. Create the skills symlink:
@@ -123,5 +123,5 @@ Junctions normally work without special permissions. If creation fails, try runn
 
 ## Getting Help
 
-- Report issues: https://github.com/NeuralEmpowerment/software-leverage-points/issues
-- Main documentation: https://github.com/NeuralEmpowerment/software-leverage-points
+- Report issues: https://github.com/syntropic137/software-leverage-points/issues
+- Main documentation: https://github.com/syntropic137/software-leverage-points

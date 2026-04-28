@@ -10,7 +10,7 @@ Enable software-leverage-points skills in Codex via native skill discovery. Just
 
 1. **Clone the software-leverage-points repository:**
    ```bash
-   git clone https://github.com/NeuralEmpowerment/software-leverage-points.git ~/.codex/software-leverage-points
+   git clone https://github.com/syntropic137/software-leverage-points.git ~/.codex/software-leverage-points
    ```
 
 2. **Create the skills symlink:**
