@@ -70,6 +70,16 @@ description: Use when reviewing <lp-name> concerns: <short list of axes>
 
 **Notably absent:** Input, Workflow, Output, schema reference. SLPs do not have "workflows" because they are not invoked as procedures. The operator skills carry the procedure; SLPs carry the content the procedure consults.
 
+### Authoring rules for principle skills
+
+Three rules apply to every principle SLP, learned by refining `testing` first and forward-applied to subsequent skill authoring:
+
+1. **Growth examples are tech-agnostic.** Specific tools and frameworks belong only in `## Suggested technologies (as of YYYY-MM-DD)`. Growth examples describe the practices and patterns that mature across maturity stages; tools change underneath those patterns. Naming a specific tool in a growth example creates drift the moment that tool falls out of fashion.
+
+2. **Principles must scope themselves.** When a principle applies to a subset of the SLP's surface, the principle's heading or first sentence states the scope explicitly. Example: FIRST applies only to unit tests; integration and end-to-end tests inherit only a subset. Without explicit scoping, the principle over-claims and findings drawn from it become wrong.
+
+3. **Multiple-valid-approach principles state the choice rule.** When more than one good approach exists for a concern, the principle articulates the options and requires within-project consistency rather than picking one arbitrarily. The red flag is "no stated convention," not "did not pick approach X." Example: test locality, where mirroring under `tests/` and co-locating with source are both valid; the SLP's job is to require a chosen-and-consistent approach, not to dictate which.
+
 ## L2 Skill Structure (`skill-builder` output)
 
 When `skill-builder` instantiates an SLP into a target repo, the L2 SKILL.md adds two sections that capture *where this repo is* and *where its next maturity step would lead*:
