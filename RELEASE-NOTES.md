@@ -39,7 +39,7 @@ Multi-vendor scaffolding patterns and structural conventions adapted from [obra/
 
 ### What's next (v0.2 roadmap)
 
-- Marketplace listing.
+- Marketplace listing: in progress (`.claude-plugin/marketplace.json` authored, not yet published).
 - `skill-builder` greenfield mode.
 - A real eval against an external project's PR diff (eval-005).
-- A scripted version of the auditor's checks (`scripts/audit.sh`) for CI integration.
+- Scripted version of the auditor's checks (`scripts/audit.sh`) for CI integration: in progress (script authored; runs the cross-doc, version, link, and em-dash checks deterministically).
