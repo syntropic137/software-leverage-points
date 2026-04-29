@@ -142,6 +142,28 @@ Stage 1 (per-SLP output) and Stage 2 (orchestrator merged output) have separate 
 
 These three contracts together are what make the pattern trustworthy at scale: the operator can rely on the system's output without re-verifying that each layer obeyed its constraints, because mechanical checks already did.
 
+## Performance architecture (added 2026-04-29, evidence: EVAL-001)
+
+The orchestrator's runtime shape is itself a load-bearing decision. EVAL-001 ([`docs/evals/EVAL-001-orchestrator-perf.md`](../evals/EVAL-001-orchestrator-perf.md)) ran a five-cell experiment (baseline + Phase A+B + three dedup-strategy variants) and produced four rules that now constrain the orchestrator implementation. Changes that violate these rules require a new ADR or an amendment.
+
+### 1. Stage 1 fan-out is parallel and bounded by the slowest SLP
+
+The 17 SLP reviewer subagents are dispatched in a single assistant message, all with `model: "opus"`. Wall time is bounded by the slowest individual subagent (~3 minutes against a representative plan), not by the count of SLPs. Sequential fan-out is forbidden.
+
+### 2. Stage 1 outputs are written to per-SLP scratch files, never returned in subagent response bodies
+
+Each SLP subagent receives an `OUTPUT_FILE_PATH` parameter and uses the Write tool to emit its findings YAML directly to that file. The subagent's response is a one-line confirmation. The parent does not re-ingest 17 response bodies; a Bash concat or a Python aggregator stitches per-SLP files for the dedup pass. This eliminates the ~7-minute parent re-ingestion overhead measured in the pre-EVAL-001 baseline.
+
+### 3. Dedup is a single-shot Opus call
+
+Sonnet dedup, action-sharded parallel Opus dedup, and mechanical-pre-cluster + Sonnet-polish were all tested in EVAL-001's Phase C matrix. All three regressed on cluster integrity (Sonnet collapsed the effort dimension; mechanical clustering missed cross-SLP vocabulary differences and kept duplicates as separate clusters; action-sharded did not finish in acceptable time). Single Opus dedup at ~6 minutes is the floor for cluster-integrity quality at this stage.
+
+### 4. Routing, presentation, and plan-v2 generation are deterministic Python
+
+The action matrix (Step 5), three-section markdown rendering (Step 8), and plan-v2 generation are all mechanical transforms with no LLM judgment required. They are implemented as Python scripts under `skills/software-leverage-review/scripts/` (`render-review.py`, `build-plan-v2.py`). LLM calls at these stages introduce schema drift (invented sections, malformed enum values, dropped findings) without compensating quality benefit, as documented in EVAL-001.
+
+These four rules together produce the ~11.5-minute wall budget for a plan-review run (Stage 1 ~3min + dedup ~6min + Python steps <30s). Future optimization should target the Stage 1 floor (e.g., Sonnet at Stage 1 to compress the dominant cost) rather than the post-Stage-1 pipeline, which is now near-optimal.
+
 ## References
 
 ### Eval evidence
