@@ -30,7 +30,7 @@ description: Use when reviewing whether a plugin's leverage-point skills still m
    - Verify each claim against the target repo's actual state (Read/Glob/Grep).
    - For each mismatch, emit a finding with `severity: warn` (drift), the claimed value, the actual value, and a suggested update.
    - Parse the `## Maturity Assessment` and `## Growth Direction` sections (added by `skill-builder`). Compare the claimed level against current signals (CI presence, contributor count, deploy cadence, public consumers, release tags). Apply maturity-drift checks:
-     - `severity: warn`: the Maturity Assessment claims a level the target has outgrown (for example, "POC" with CI green for 90 days, multiple contributors, and external users).
+     - `severity: medium`: the Maturity Assessment claims a level the target has outgrown (for example, "POC" with CI green for 90 days, multiple contributors, and external users).
      - `severity: info`: the Growth Direction's "natural next step" is now overdue (the documented trigger has fired without the step being addressed).
      - `severity: info`: `Last reviewed` is older than 6 months even when the assessment still appears accurate (stale review timestamp).
 
@@ -42,13 +42,13 @@ description: Use when reviewing whether a plugin's leverage-point skills still m
 
 3. Validate reference-link integrity (regardless of mode):
    - For every relative path mentioned in any SKILL.md, references doc, or prompt file in scope, verify the file exists.
-   - Broken links emit `severity: error` findings.
+   - Broken links emit `severity: high` findings.
 
-4. Emit findings using the schema at `../software-leverage-review/output-schema.json`. The `software_leverage_point` field MUST be `"skill-auditor"`. Note: the auditor is an operator skill, not a leverage point per se; the schema's `software_leverage_point` field is overloaded here for output-format consistency.
+4. Emit findings using the schema at `../software-leverage-review/slp-output-schema.yaml`. The `software_leverage_point` field MUST be `"skill-auditor"`. Note: the auditor is an operator skill, not a leverage point per se; the schema's `software_leverage_point` field is overloaded here for output-format consistency.
 
 ## Output
 
-Conforms to `../software-leverage-review/output-schema.json` per-LP shape.
+Conforms to `../software-leverage-review/slp-output-schema.yaml` per-LP shape.
 
 ## Red Flags (anti-patterns the auditor surfaces as findings)
 

@@ -5,6 +5,11 @@ each focused on a single software leverage point (testing, logging, architecture
 dependencies, security, etc.), plus an orchestrator that fans them out at
 plan-time and PR-time.
 
+**Canonical references** (read these before substantive work):
+
+- [`VISION.md`](VISION.md): what this plugin is for, the end state, the severity-action policy, and the acceptance tests.
+- [`docs/ADRs/ADR-0001-three-layer-skill-pattern.md`](docs/ADRs/ADR-0001-three-layer-skill-pattern.md): the architectural decision behind L1 / L2 / orchestrator.
+
 Scaffolding patterns in this repo are adapted from
 [obra/superpowers](https://github.com/obra/superpowers), which is also a runtime
 peer: this plugin expects superpowers to be installed alongside it for shared
@@ -21,6 +26,11 @@ workflow skills (e.g. `subagent-driven-development`, `brainstorming`).
 4. **Cite your sources.** Each leverage-point skill should reference the ADRs,
    books, or practitioners that ground its red flags (Fowler, Beck, Brooks,
    Khorikov, Ousterhout, Hejlsberg, etc.).
+5. **L2 SKILL.md files are context, not reviewers.** When editing or generating
+   any `.claude/skills/<lp>/SKILL.md` for a target repo, do not include `error`
+   / `warn` / `info` severity labels in the body. Severity is the orchestrator's
+   job (`software-leverage-review`). L2 records observations, conventions, and
+   gaps; the orchestrator reads them and assigns severity at review time.
 
 ## Where things live
 

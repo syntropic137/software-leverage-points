@@ -1,0 +1,108 @@
+# Common types shared by slp-output-schema.yaml and orchestrator-output-schema.yaml.
+#
+# Severity, Effort, and Action enum values are governed by ./severity-action-policy.md.
+# Update both files together. scripts/check-policy-consistency.sh enforces parity.
+
+$schema: http://json-schema.org/draft-07/schema#
+$id: https://raw.githubusercontent.com/syntropic137/software-leverage-points/main/skills/software-leverage-review/common-types.yaml
+title: Software Leverage Review - Common Types
+
+$defs:
+  Severity:
+    type: string
+    enum: [critical, high, medium, low, info]
+    description: |
+      Five-level severity per ./severity-action-policy.md.
+      critical = incident-class.
+      high = significant correctness/trust risk.
+      medium = real concern, bounded blast radius.
+      low = minor concern.
+      info = observation, not an issue.
+
+  Effort:
+    type: string
+    enum: [small, medium, large]
+    description: |
+      Three-level cost-to-fix estimate per ./severity-action-policy.md.
+      small = one file or small related changes.
+      medium = multiple files, bounded scope.
+      large = broad blast radius or scope decisions; never auto-fixed.
+
+  Action:
+    type: string
+    enum: [auto-fix, promote, bulk]
+    description: |
+      Routing action per ./severity-action-policy.md action matrix.
+      auto-fix = downstream workflow phase incorporates fix.
+      promote = operator review required.
+      bulk = audit-only, numbered-list section.
+
+  CrossCuttingSLP:
+    type: string
+    enum: [dry, principles-and-patterns, software-complexity]
+    description: |
+      The three software leverage points that are cross-cutting concerns.
+      A finding from any SLP may also violate one or more of these.
+
+  SLPFinding:
+    type: object
+    description: |
+      A single finding emitted by a software-leverage-point subagent (Stage 1).
+      Subagents set severity and effort per the policy. They do NOT set action;
+      the orchestrator computes action from severity + effort during Stage 2 synthesis.
+    required: [severity, effort, issue, suggested_fix]
+    additionalProperties: false
+    properties:
+      severity: { $ref: "./common-types.yaml#/$defs/Severity" }
+      effort: { $ref: "./common-types.yaml#/$defs/Effort" }
+      issue:
+        type: string
+        minLength: 1
+        description: Concrete description; cite plan section, repo file path, or diff hunk.
+      suggested_fix:
+        type: string
+        minLength: 1
+        description: Actionable next move. For auto-fix-bound findings, detailed enough that a downstream phase incorporates the fix. For promote-bound, names the scope decision.
+      file:
+        type: string
+        description: Optional file path or plan section heading.
+      line:
+        type: integer
+        minimum: 0
+        description: Optional line number for location-grounded findings.
+      cross_cutting_violations:
+        type: array
+        uniqueItems: true
+        items: { $ref: "./common-types.yaml#/$defs/CrossCuttingSLP" }
+        description: Optional annotations naming any cross-cutting SLPs the finding also violates.
+
+  RoutedFinding:
+    type: object
+    description: |
+      A finding after orchestrator synthesis (Stage 2). Same shape as SLPFinding plus
+      software_leverage_point (which SLP emitted it) and action (assigned per the action matrix).
+    required: [severity, effort, issue, suggested_fix, software_leverage_point, action]
+    additionalProperties: false
+    properties:
+      severity: { $ref: "./common-types.yaml#/$defs/Severity" }
+      effort: { $ref: "./common-types.yaml#/$defs/Effort" }
+      action: { $ref: "./common-types.yaml#/$defs/Action" }
+      software_leverage_point:
+        type: string
+        minLength: 1
+        description: SLP that emitted the finding.
+      issue:
+        type: string
+        minLength: 1
+      suggested_fix:
+        type: string
+        minLength: 1
+      file:
+        type: string
+      line:
+        type: integer
+        minimum: 0
+      cross_cutting_violations:
+        type: array
+        uniqueItems: true
+        items: { $ref: "./common-types.yaml#/$defs/CrossCuttingSLP" }

@@ -1,0 +1,30 @@
+# Lens Output Schema (Stage 1).
+#
+# Conformed to by every lens subagent dispatched by the software-leverage-review orchestrator.
+# Each lens emits a single YAML document of this shape; the orchestrator parses each and feeds
+# them to the synthesis pass.
+#
+# Severity and effort enum values are defined in ./common-types.yaml and governed by
+# ./severity-action-policy.md (canonical). The lens does NOT set the action field;
+# action is computed during orchestrator synthesis using the policy's action matrix.
+
+$schema: http://json-schema.org/draft-07/schema#
+$id: https://syntropic137.dev/software-leverage-points/lens-output-schema.yaml
+title: Lens Subagent Output (Stage 1)
+
+type: object
+required: [software_leverage_point, findings, summary]
+additionalProperties: false
+properties:
+  software_leverage_point:
+    type: string
+    minLength: 1
+    description: Lens name (e.g. "testing", "documentation", "security").
+  findings:
+    type: array
+    items: { $ref: "./common-types.yaml#/$defs/LensFinding" }
+    description: Findings emitted by this lens. May be empty if no concerns surfaced.
+  summary:
+    type: string
+    minLength: 1
+    description: One to two sentences on overall lens findings against the target.

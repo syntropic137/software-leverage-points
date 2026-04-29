@@ -11,3 +11,6 @@ docs/evals/
 docs/phase-2/
 MIGRATION.md
 PHASE-2.md
+
+# Claude Code runtime state
+.claude/scheduled_tasks.lock

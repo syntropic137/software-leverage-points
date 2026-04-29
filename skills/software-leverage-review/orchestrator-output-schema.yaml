@@ -1,0 +1,43 @@
+# Orchestrator Output Schema (Stage 2).
+#
+# Emitted by the software-leverage-review orchestrator after dedup and action-matrix routing.
+# Each finding carries an action field assigned per ./severity-action-policy.md.
+#
+# Severity, effort, and action enum values are defined in ./common-types.yaml and governed by
+# ./severity-action-policy.md (canonical).
+#
+# The orchestrator emits BOTH this YAML document (machine contract) AND a human-readable
+# markdown report. The markdown shape is defined in ./severity-action-policy.md under
+# "Stage 2: Orchestrator output." Both artifacts ship in the same run.
+
+$schema: http://json-schema.org/draft-07/schema#
+$id: https://raw.githubusercontent.com/syntropic137/software-leverage-points/main/skills/software-leverage-review/orchestrator-output-schema.yaml
+title: Orchestrator Merged Output (Stage 2)
+
+type: object
+required: [target, software_leverage_points_reviewed, findings, summary]
+additionalProperties: false
+properties:
+  target:
+    type: string
+    minLength: 1
+    description: What was reviewed (file path, plan reference, diff range, "codebase HEAD").
+  software_leverage_points_reviewed:
+    type: array
+    items:
+      type: string
+      minLength: 1
+    minItems: 1
+    description: SLPs that returned findings in this run.
+  findings:
+    type: array
+    items: { $ref: "./common-types.yaml#/$defs/RoutedFinding" }
+    description: Deduplicated findings, each carrying its assigned action per the action matrix.
+  cross_cutting_synthesis:
+    type: array
+    items: { $ref: "./common-types.yaml#/$defs/RoutedFinding" }
+    description: Optional cross-cutting findings flagged by 3+ SLPs; surfaced separately so convergence is preserved as a first-class signal.
+  summary:
+    type: string
+    minLength: 1
+    description: 3-5 sentences naming the most load-bearing items and any cross-cutting patterns.

@@ -9,7 +9,7 @@ default:
 # QA aggregator: runs every check that CI runs. CI invokes this directly.
 # Local devs: run `just regenerate-catalogs` first if you added or removed a
 # skill, then `just qa` to verify nothing else drifted.
-qa: check-catalogs audit check-backlinks
+qa: check-catalogs audit check-backlinks check-policy
     @echo "qa: ALL CHECKS PASS"
 
 # Run the full audit (count consistency, link integrity, em-dashes, backlink symmetry).
@@ -20,14 +20,18 @@ audit:
 regenerate-catalogs:
     bash scripts/regenerate-catalogs.sh
 
-# Verify the generated catalogs are in sync with the filesystem (CI / pre-commit).
+# Verify the generated catalogs and SLP manifest are in sync with the filesystem (CI / pre-commit).
 check-catalogs:
     bash scripts/regenerate-catalogs.sh
-    git diff --exit-code docs/leverage-points.md
+    git diff --exit-code docs/leverage-points.md skills/software-leverage-review/slp-manifest.yaml
 
 # Verify SLP-to-SLP cross-references are bidirectional.
 check-backlinks:
     bash scripts/check-backlinks.sh
+
+# Verify the severity-action policy and its consumers stay in sync.
+check-policy:
+    bash scripts/check-policy-consistency.sh
 
 # Bump the plugin version across all declared manifests + stub release notes.
 bump version:
