@@ -16,13 +16,20 @@ Five levels, ranked by impact. Severity is the absolute weight of the issue, ind
 
 ## Effort enum
 
-Three levels. Effort is the cost-to-fix estimate, orthogonal to severity.
+Three levels. Effort is the cost of *executing what the `suggested_fix` actually implies*, orthogonal to severity.
+
+The distinction matters because plan-review findings and codebase-review findings rate effort against different surfaces:
+
+- **Codebase review.** The `suggested_fix` typically describes a code change. Effort rates the implementation cost of that code change.
+- **Plan review.** The `suggested_fix` typically asks for a plan revision (add a section, name an ADR, choose between options, verify an upstream surface). The textual edit to the plan is almost always trivial; what matters is the cost of what the revised plan actually commits to. Rate effort as the implementation cost of what the plan would commit to once the revision lands. Writing a new ADR is `medium`; verifying an upstream API surface that may not exist is `medium`; introducing a load-bearing cross-cutting pattern is `large`.
 
 | Effort | Definition |
 |---|---|
-| **small** | One file or a small set of related changes. A maintainer ships it within an hour. |
-| **medium** | Multiple files but a bounded scope. A maintainer ships it within a day. |
-| **large** | Broad blast radius, multi-PR sequencing, or scope decisions that require operator judgment. The system does not auto-fix large items. |
+| **small** | One file or a small set of related changes. A maintainer ships it within an hour. For plan reviews: a textual clarification with no implementation consequence (rename a section, fix a typo, add a Non-goals bullet). |
+| **medium** | Multiple files but a bounded scope. A maintainer ships it within a day. For plan reviews: writing a new ADR, verifying an upstream API surface, choosing between two designs the plan left open. |
+| **large** | Broad blast radius, multi-PR sequencing, or scope decisions that require operator judgment. The system does not auto-fix large items. For plan reviews: introducing a new cross-cutting pattern, restructuring the phased delivery, committing to a dependency the plan deferred. |
+
+The action matrix promotes large-effort items so the operator weighs the scope decision before the work commits. This applies equally to plan reviews and codebase reviews; only the surface against which effort is rated differs.
 
 ## Action enum
 

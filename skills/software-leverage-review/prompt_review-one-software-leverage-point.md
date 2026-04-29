@@ -18,6 +18,8 @@ You are a subagent dispatched by the `software-leverage-review` orchestrator. Re
 3. Apply that skill's workflow against `TARGET_PATH`.
 4. Consult `./references/*.md` cross-cutting reference docs (siblings of this prompt) if the software leverage point skill instructs you to.
 5. For each finding, assign `severity` and `effort` per the policy. Calibrate `severity` to `MATURITY_STAGE` per the policy's `## Maturity calibration` section. Do NOT set the `action` field; the orchestrator computes it from severity + effort during synthesis.
+
+   **Effort rates the cost of executing what the `suggested_fix` implies, not the cost of writing the fix down.** For codebase reviews, this is the implementation cost of the code change. For plan reviews, the textual edit is almost always trivial; rate effort as the cost of what the revised plan would commit to once the revision lands. Writing a new ADR is `medium`. Verifying an upstream API surface that may not exist is `medium`. Introducing a new cross-cutting pattern, restructuring phased delivery, or committing to a deferred dependency is `large`. A renamed section or a Non-goals bullet is `small`. See the policy's effort enum for the full distinction.
 6. **Write** the findings as a single YAML document (conforming to `SLP_OUTPUT_SCHEMA_PATH`, Stage 1: Per-SLP output) directly to `OUTPUT_FILE_PATH` using the Write tool. Pure YAML, no markdown fence, no prose, no `action` field.
 
 ## Output
