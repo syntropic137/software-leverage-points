@@ -21,6 +21,7 @@ Raw artifacts (full run.jsonl logs, plan-v2 outputs, intermediate findings.yaml 
 | Number | Title | Date | Decision impact |
 |---|---|---|---|
 | [EVAL-001](EVAL-001-orchestrator-perf.md) | Orchestrator performance and dedup-strategy matrix | 2026-04-29 | ADR-0001 "Mechanical enforcement" subsection |
+| [EVAL-002](EVAL-002-canonical-flow-4-target-matrix.md) | Canonical-flow 4-target matrix (2 plans + 2 codebases) | 2026-04-29 | ADR-0001 "Performance architecture" validation; production-readiness gap list |
 
 ## What gets committed
 
