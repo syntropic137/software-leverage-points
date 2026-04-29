@@ -54,7 +54,15 @@ If `maturity_hint` is supplied as orchestrator input, it overrides the inferred 
 
 4. Wait for all subagents to confirm. The parent does NOT re-ingest YAML from each response; subagent responses are one-line confirmations. The actual findings YAML lives in the per-SLP files written in step 2.
 
-5. **Apply the action matrix** per [`./severity-action-policy.md`](./severity-action-policy.md) to assign each finding an `action` field (`auto-fix`, `promote`, or `bulk`). The hard rule: any finding with `effort: large` receives `action: promote`, regardless of severity. Add `software_leverage_point` to each finding (which SLP emitted it). Routing is deterministic; do this in a script (Bash + Python or jq), not via an LLM call.
+4a. **Verify Stage 1 health and schema.** Run `./scripts/verify-stage1.py ${OUTPUT_DIR}/raw-findings/ ./slp-manifest.yaml`. The script enforces two gates: (i) the manifest's expected SLPs all returned files (no silent partial coverage), (ii) each per-SLP file conforms to `slp-output-schema.yaml` (no markdown-fence wrappers, no `action` field, valid severity/effort enums, required fields present). The script's JSON output names invalid SLPs with their specific issues. If any SLPs are invalid, re-dispatch ONLY those SLPs once with a tightened prompt that names the specific schema violations to avoid (markdown fences, action field, etc.). After retry, re-run the verifier. If still invalid, surface a loud failure rather than proceed with partial coverage.
+
+4b. **Concat raw findings** into `${OUTPUT_DIR}/raw-findings.yaml` only after Stage 1 is healthy. Use Bash + a small uv-run Python to walk `raw-findings/*.yaml`, attach `software_leverage_point` to each finding, and emit a single document with key `collected_findings: [...]`.
+
+5. **Dedup pass** (single Opus call). The orchestrator dispatches one Agent with `model: "opus"` against `${OUTPUT_DIR}/raw-findings.yaml`; the subagent emits `${OUTPUT_DIR}/deduped.yaml` with cluster entries each carrying `original_indices` (back-pointers to raw findings).
+
+5a. **Verify dedup output.** Run `./scripts/dedup-verify.py ${OUTPUT_DIR}/raw-findings.yaml ${OUTPUT_DIR}/deduped.yaml`. The script reads each cluster's `original_indices`, computes max severity and max effort across the actual member findings, and overrides the cluster's reported values if they are below the computed max. This is a deterministic correction pass (NO LLM); it is monotone (only raises severity or effort, never lowers) and addresses the empirically-observed failure mode where the dedup LLM occasionally collapses the effort dimension and breaks the action matrix. The corrected document is written in place.
+
+5b. **Apply the action matrix** per [`./severity-action-policy.md`](./severity-action-policy.md) to assign each finding an `action` field (`auto-fix`, `promote`, or `bulk`). The hard rule: any finding with `effort: large` receives `action: promote`, regardless of severity. Add `software_leverage_point` to each finding (which SLP emitted it). Routing is deterministic; do this in a script (Bash + Python or jq), not via an LLM call.
 
 6. **Group findings by action** for the output structure: headline (auto-fix), promoted (promote), bulk (bulk).
 
@@ -76,6 +84,8 @@ Both are emitted in the same run.
 - [`./severity-action-policy.md`](./severity-action-policy.md) **(canonical: severity, effort, action matrix, maturity calibration, output structures)**
 - [`./slp-manifest.yaml`](./slp-manifest.yaml) (auto-generated canonical list of SLPs in the fan-out; iterate over this, not the filesystem)
 - [`./common-types.yaml`](./common-types.yaml) (shared enums and Finding types referenced by both stage schemas)
+- `./scripts/verify-stage1.py` (Stage 1 health gate + schema validator; orchestrator invokes after fan-out before dedup)
+- `./scripts/dedup-verify.py` (deterministic severity/effort floor correction on dedup output)
 - [`./slp-output-schema.yaml`](./slp-output-schema.yaml) (Stage 1: what each SLP subagent emits)
 - [`./orchestrator-output-schema.yaml`](./orchestrator-output-schema.yaml) (Stage 2: what this orchestrator emits)
 - `references/dry.md` (consulted in synthesis)

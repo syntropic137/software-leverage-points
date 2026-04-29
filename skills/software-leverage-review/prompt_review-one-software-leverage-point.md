@@ -23,3 +23,16 @@ You are a subagent dispatched by the `software-leverage-review` orchestrator. Re
 ## Output
 
 Return ONLY a one-line confirmation message of the form `wrote <N> findings to <OUTPUT_FILE_PATH>`. The orchestrator does not parse your response body; it reads `OUTPUT_FILE_PATH` directly. Do NOT include the YAML in your response; that defeats the purpose of writing to file.
+
+## Retry guidance (only if the orchestrator dispatches you a second time)
+
+If your first dispatch failed schema validation by `verify-stage1.py`, the orchestrator may re-dispatch you once with this prompt extended by the specific issues. Common failure modes and their corrections:
+
+- **Markdown fence around YAML.** Forbidden. Write pure YAML directly to `OUTPUT_FILE_PATH` with no `\`\`\`yaml ... \`\`\`` wrapping. The Write tool takes raw text; do not pre-wrap it as a code block.
+- **`action` field on a finding.** Forbidden. The action is computed by the orchestrator at Stage 1.5 from severity and effort. You assign only severity and effort.
+- **Invalid severity enum value.** Must be exactly one of: `critical`, `high`, `medium`, `low`, `info`. No synonyms (`error`, `warn`, `important`, etc.).
+- **Invalid effort enum value.** Must be exactly one of: `small`, `medium`, `large`. No synonyms.
+- **Missing required field.** Every finding must carry `severity`, `effort`, `issue`, `suggested_fix`. The top-level document must carry `software_leverage_point`, `findings`, and `summary`.
+- **Issue or suggested_fix is empty / whitespace-only.** Both must be non-empty strings.
+
+If you receive a retry dispatch with a list of specific schema issues, address each one explicitly. Re-emit the corrected YAML to `OUTPUT_FILE_PATH` (overwriting the prior file). The orchestrator will re-validate; this is the last retry.
