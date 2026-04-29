@@ -5,6 +5,20 @@ description: Use when bootstrapping leverage-point skills in a target repo, or w
 
 # Skill Builder (templated mode, POC)
 
+## Runtime requirement
+
+**Invoke this skill via `claude -p`, not as a sibling skill in an existing session.** This skill dispatches 17 sub-skill generation subagents in parallel; Claude Code's subagent-dispatch budget is one level deep, so an orchestrator that is itself a subagent cannot fan out. Running as `claude -p` gives this skill its own top-level session with a fresh dispatch budget.
+
+Concretely:
+
+```bash
+claude -p "<bootstrap-prompt>" --dangerously-skip-permissions \
+  --output-format stream-json --verbose \
+  --add-dir /path/to/plugin --add-dir /path/to/target-repo
+```
+
+The cost (~$10) and wall time (~5 min) are bounded; once invoked, the run is autonomous.
+
 ## When to Use
 
 - The user wants to bootstrap repo-specific (L2) leverage-point skills in a target repo

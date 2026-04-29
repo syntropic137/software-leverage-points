@@ -5,6 +5,18 @@ description: Use when reviewing whether a plugin's leverage-point skills still m
 
 # Skill Auditor (Operator Skill)
 
+## Runtime requirement
+
+**Invoke this skill via `claude -p`, not as a sibling skill in an existing session.** This skill dispatches per-SLP audit subagents in parallel; Claude Code's subagent-dispatch budget is one level deep, so an orchestrator that is itself a subagent cannot fan out. Running as `claude -p` gives this skill its own top-level session with a fresh dispatch budget.
+
+Concretely:
+
+```bash
+claude -p "<audit-prompt>" --dangerously-skip-permissions \
+  --output-format stream-json --verbose \
+  --add-dir /path/to/plugin --add-dir /path/to/target-repo
+```
+
 ## When to Use
 
 - A repo's bootstrapped (L2) leverage skills have not been refreshed since major changes to the codebase

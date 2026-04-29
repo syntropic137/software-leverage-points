@@ -5,6 +5,20 @@ description: Use when reviewing a plan document, PR diff, or codebase against mu
 
 # Software Leverage Review (Orchestrator)
 
+## Runtime requirement
+
+**Invoke this skill via `claude -p`, not as a sibling skill in an existing session.** This orchestrator dispatches 17 SLP subagents in parallel; Claude Code's subagent-dispatch budget is one level deep, so an orchestrator that is itself a subagent cannot fan out. Running as `claude -p` gives the orchestrator its own top-level session with a fresh dispatch budget.
+
+Concretely:
+
+```bash
+claude -p "<orchestrator-prompt>" --dangerously-skip-permissions \
+  --output-format stream-json --verbose \
+  --add-dir /path/to/plugin --add-dir /path/to/scratch
+```
+
+Direct invocation from within another claude session will fail when the orchestrator tries to dispatch the SLP subagents. The cost (~$15-25) and wall time (~10-15 min) are bounded; once invoked, the run is autonomous and the parent agent can poll for completion.
+
 ## When to Use
 
 - A plan document is drafted and needs review before implementation
