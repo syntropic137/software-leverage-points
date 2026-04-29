@@ -7,10 +7,14 @@ node_modules/
 __pycache__/
 *.pyc
 markdown-explorer/
-docs/evals/
 docs/phase-2/
 MIGRATION.md
 PHASE-2.md
+
+# Eval working artifacts (raw run logs, intermediate findings YAML, plan-v2
+# outputs, per-SLP scratch dirs, large stream-json transcripts). Committed
+# eval entries live in docs/evals/findings/ as curated, sanitized summaries.
+_archive/
 
 # Claude Code runtime state
 .claude/scheduled_tasks.lock

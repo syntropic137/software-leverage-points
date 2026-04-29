@@ -144,17 +144,26 @@ These three contracts together are what make the pattern trustworthy at scale: t
 
 ## References
 
-- Eval plan: `docs/evals/eval-plan-phase-3-2026-04-28.md`
-- Round 1 eval outputs: `/tmp/slp-eval-phase3-2026-04-28/<target>/skills/`
-- Round 1 critique: `/tmp/slp-eval-phase3-2026-04-28/critique-openclaw.md`
+### Eval evidence
+
+- Eval log index: [`docs/evals/README.md`](../evals/README.md)
+- [`EVAL-001: Orchestrator performance and dedup-strategy matrix`](../evals/EVAL-001-orchestrator-perf.md) - evidence behind the "Mechanical enforcement" rules above (Stage 1 parallel + per-SLP file writes; single-shot Opus dedup; deterministic Python for routing / presentation / plan-v2)
+
+### Implementation
+
 - Generator: `skills/skill-builder/SKILL.md` and `skills/skill-builder/prompt_template-one-skill.md`
 - Orchestrator: `skills/software-leverage-review/SKILL.md`
+- Per-SLP subagent prompt: `skills/software-leverage-review/prompt_review-one-software-leverage-point.md`
 - Canonical policy: `skills/software-leverage-review/severity-action-policy.md`
 - SLP manifest: `skills/software-leverage-review/slp-manifest.yaml` (auto-generated)
 - Stage 1 schema: `skills/software-leverage-review/slp-output-schema.yaml`
 - Stage 2 schema: `skills/software-leverage-review/orchestrator-output-schema.yaml`
 - Common types: `skills/software-leverage-review/common-types.yaml`
+- Deterministic renderer: `skills/software-leverage-review/scripts/render-review.py`
 - Validators: `scripts/check-policy-consistency.sh`, `scripts/validate-output.ts`, `scripts/regenerate-catalogs.sh`
+
+### Cross-references
+
 - README "What lives in each layer" subsection
 - CLAUDE.md project rule #5
 - VISION.md "Severity-action policy" section (links canonical)
