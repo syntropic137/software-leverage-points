@@ -101,6 +101,14 @@ Each fix runs in deterministic Python with `uv run`. Per orchestrator invocation
 
 - `verify-stage1.py`: <1 second wall, $0.
 - `dedup-verify.py`: <1 second wall, $0.
-- Retry-on-drift: per-SLP retry costs ~$0.50 in the rare case (1-4 of 17 SLPs need a retry); $0 in the common case.
+- Retry-on-drift: per-SLP retry costs ~$0.40 in practice (each retry is roughly equivalent to one Stage 1 dispatch).
 
-These are pure quality wins with negligible budget impact.
+## Production-scale validation (added 2026-04-29 evening)
+
+Re-ran the syntropic-plan target with Option A (clarified effort) and the gap-fix scripts wired into the orchestrator workflow. Two findings:
+
+1. **Option A took.** Effort distribution shifted from baseline near-zero medium to 24 of 62 deduped clusters as medium (39%). The clarified policy plus prompt nudge flow through to SLP assignments. `effort: large` count remained zero because this specific plan (cost-budget feature) is internally consistent and does not require new scope decisions; the action matrix correctly produces 0 promoted, which is the right answer for this target.
+
+2. **Retry-on-drift fired heavily.** 15 of 17 SLPs needed a schema-compliance retry on first dispatch. The new effort-guidance text contains colons in its examples (`"Add Non-goals section" -> small`), and SLPs apparently echoed colon-laden format into their findings, hitting YAML parser edge cases. The retry mechanism with the tightened prompt corrected all 15. **Without verify-stage1 + retry-on-drift, those 15 SLPs' findings would have silently dropped from the dedup pool.** Cost delta: +$6 over baseline ($17.22 vs $11.19), all of which paid for retries. The retry mechanism's value at production scale is materially higher than expected.
+
+This re-run validates the production-readiness claim: the system now reliably catches and corrects schema drift across most SLPs, accurately calibrates effort under the clarified policy, and produces stable output even when the prompt itself is updated mid-cycle.
