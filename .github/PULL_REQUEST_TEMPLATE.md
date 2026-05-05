@@ -26,8 +26,7 @@ of human involvement will be closed without review.
      - Or is it project-specific, team-specific, or harness-specific?
 
      If your change is a workflow skill or harness adapter not specific to
-     a software leverage point, it likely belongs upstream in
-     obra/superpowers, or in its own plugin. -->
+     a software leverage point, it likely belongs in its own plugin. -->
 
 ## What alternatives did you consider?
 <!-- What other approaches did you try or evaluate before landing on this
@@ -62,8 +61,8 @@ of human involvement will be closed without review.
 
 ## Rigor
 
-- [ ] If this is a skills change: I used `superpowers:writing-skills` and
-      completed adversarial pressure testing (paste results below)
+- [ ] If this is a skills change: I followed our skill-authoring discipline
+      and completed adversarial pressure testing (paste results below)
 - [ ] This change was tested adversarially, not just on the happy path
 - [ ] I did not modify carefully-tuned content (Red Flags table,
       rationalizations, "human partner" language) without extensive evals

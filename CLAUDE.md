@@ -10,10 +10,12 @@ plan-time and PR-time.
 - [`VISION.md`](VISION.md): what this plugin is for, the end state, the severity-action policy, and the acceptance tests.
 - [`docs/ADRs/ADR-0001-three-layer-skill-pattern.md`](docs/ADRs/ADR-0001-three-layer-skill-pattern.md): the architectural decision behind L1 / L2 / orchestrator.
 
-Scaffolding patterns in this repo are adapted from
-[obra/superpowers](https://github.com/obra/superpowers), which is also a runtime
-peer: this plugin expects superpowers to be installed alongside it for shared
-workflow skills (e.g. `subagent-driven-development`, `brainstorming`).
+Scaffolding patterns in this repo (directory layout, multi-vendor manifest
+mirroring) are adapted from
+[obra/superpowers](https://github.com/obra/superpowers). This is a one-way
+attribution: superpowers is not a runtime dependency, and no skill in this
+plugin invokes a `superpowers:*` skill by name. The `upstream` git remote
+exists so we can selectively pull scaffolding improvements, nothing more.
 
 ## Project rules
 
