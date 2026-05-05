@@ -14,7 +14,7 @@ This plugin treats each high-leverage concern as its own meta-skill, so an auton
 - **PR-time gate.** After implementation, fan out against the diff. Each lens flags issues that should block, warn, or inform.
 - **Codebase audit.** Run periodically against the whole repo to surface drift and accumulated debt.
 
-The skills compose with [obra/superpowers](https://github.com/obra/superpowers), a sibling plugin that provides the cross-cutting workflow skills (`brainstorming`, `subagent-driven-development`, `writing-plans`, etc.). This plugin focuses purely on the *what to review*; superpowers provides the *how to dispatch and review*.
+This plugin is self-contained and has no runtime dependency on other plugins. It focuses purely on the *what to review*: each leverage point is its own lens, and the orchestrator fans them out in parallel.
 
 ### L1 to L2 to L3 flow
 
@@ -64,17 +64,11 @@ Who owns what:
 
 ## Credit
 
-Multi-vendor scaffolding patterns adapted from [obra/superpowers](https://github.com/obra/superpowers). We track superpowers as a git `upstream` remote so we can selectively pull scaffolding improvements over time. Skills, agents, and commands are entirely our own.
-
-## Compatibility
-
-This plugin has been developed against `obra/superpowers` at HEAD as of 2026-04-27. The two plugins compose at runtime via vendor-native plugin discovery; no version pin is enforced today. If superpowers introduces breaking changes to its scaffolding conventions, this plugin's `upstream` git remote (pinned to `obra/superpowers`) makes selectively merging only the scaffolding changes straightforward. Skill compatibility is informal: this plugin invokes `superpowers:brainstorming`, `superpowers:writing-plans`, `superpowers:subagent-driven-development`, and `superpowers:writing-skills` by name. Breaking changes to those skills' descriptions or interfaces will require this plugin's docs to be updated.
+Multi-vendor scaffolding patterns (directory layout, manifest mirroring across Claude Code, Codex, Cursor, OpenCode, and Gemini) adapted from [obra/superpowers](https://github.com/obra/superpowers). We track superpowers as a git `upstream` remote so we can selectively pull scaffolding improvements over time. Skills, agents, and commands are entirely our own, and there is no runtime dependency on superpowers.
 
 ## Install
 
 This README is the explanation layer: mental model, rationale, and install instructions. The reference inventory of all shipped skills lives in `docs/leverage-points.md`. How-to guides for individual skills live in each skill's own `SKILL.md`. The split follows Diátaxis (explanation, how-to, reference) so each document has one job.
-
-This plugin composes with [`obra/superpowers`](https://github.com/obra/superpowers); install both for the full workflow.
 
 ### Claude Code
 

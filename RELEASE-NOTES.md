@@ -30,7 +30,7 @@ Score arc demonstrates that the citation discipline + lens coverage compounded; 
 
 ### Credit
 
-Multi-vendor scaffolding patterns and structural conventions adapted from [obra/superpowers](https://github.com/obra/superpowers). This plugin runs alongside it: superpowers ships the cross-cutting workflow skills (`brainstorming`, `subagent-driven-development`, `writing-plans`, `writing-skills`); this plugin ships the *what to review* skills.
+Multi-vendor scaffolding patterns and structural conventions adapted from [obra/superpowers](https://github.com/obra/superpowers). This is attribution only; superpowers is not a runtime dependency of this plugin.
 
 ### Known limitations
 
