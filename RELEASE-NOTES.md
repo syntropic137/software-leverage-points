@@ -1,5 +1,9 @@
 # Release Notes
 
+## v0.1.1 (2026-05-05)
+
+Docs-only patch. Clarifies `obra/superpowers` as scaffolding-only attribution; this plugin has no runtime dependency on superpowers and no skill invokes a `superpowers:*` skill by name. Removes the README "Compatibility" section and "install both" line, and the corresponding language in `CLAUDE.md`, the PR template, and `marketplace.json` keywords.
+
 ## v0.1.0 (2026-04-27)
 
 Initial public release. Ships 18 leverage-point skills, 3 operator skills, 3 lens reference docs, formal output schema with validator, and full multi-vendor scaffolding.
