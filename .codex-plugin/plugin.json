@@ -1,6 +1,6 @@
 {
   "name": "software-leverage-points",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Skills for reviewing software through leverage-point lenses (testing, logging, architecture, dependencies, security, and more). Includes an orchestrator that fans out parallel subagents per leverage point during planning, code review, and codebase audit.",
   "author": {
     "name": "NeuralEmpowerment"
