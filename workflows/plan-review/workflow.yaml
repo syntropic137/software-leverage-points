@@ -29,7 +29,7 @@ inputs:
 
 skills:
   - source: https://github.com/syntropic137/software-leverage-points
-    version: 5d48e71018b5aba756530b14d110816ea107b8c6
+    version: 1348146ae5fd1659f2022b3c2bef0218292348d4
     names:
       - software-leverage-review
       - architecture

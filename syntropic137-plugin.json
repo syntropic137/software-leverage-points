@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "name": "software-leverage-points",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Fan out the software leverage point lenses (architecture, testing, security, types, delivery, and 12 more) across a codebase or a plan document, then triage the findings into an actionable queue.",
   "author": "syntropic137",
   "license": "MIT",
