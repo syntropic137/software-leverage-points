@@ -9,7 +9,7 @@ default:
 # QA aggregator: runs every check that CI runs. CI invokes this directly.
 # Local devs: run `just regenerate-catalogs` first if you added or removed a
 # skill, then `just qa` to verify nothing else drifted.
-qa: check-catalogs audit check-backlinks check-policy
+qa: check-catalogs audit check-backlinks check-policy check-frontmatter
     @echo "qa: ALL CHECKS PASS"
 
 # Run the full audit (count consistency, link integrity, em-dashes, backlink symmetry).
@@ -32,6 +32,9 @@ check-backlinks:
 # Verify the severity-action policy and its consumers stay in sync.
 check-policy:
     bash scripts/check-policy-consistency.sh
+
+check-frontmatter:
+    bash scripts/check-frontmatter.sh
 
 # Bump the plugin version across all declared manifests + stub release notes.
 bump version:
