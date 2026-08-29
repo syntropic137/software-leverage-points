@@ -18,22 +18,40 @@ import sys
 
 try:
     import yaml
-except ImportError:
-    print("PyYAML is required: pip install pyyaml", file=sys.stderr)
+except ImportError:  # pragma: no cover - CI installs only `just`
+    print(
+        "PyYAML not available. Install it (pip install pyyaml) or run via a "
+        "Python that has it; this check cannot silently pass without a parser.",
+        file=sys.stderr,
+    )
     raise SystemExit(2) from None
 
 failures: list[str] = []
 checked = 0
 
-for path in sorted(pathlib.Path("skills").glob("*/SKILL.md")):
-    text = path.read_text()
-    parts = text.split("---")
-    if len(parts) < 3:
-        failures.append(f"{path}: no frontmatter block")
+# Every tracked SKILL.md, not just skills/*/SKILL.md. A codex review caught that
+# globbing one root skipped .claude/skills/, which contained a fifth file broken
+# the same way -- the guard reported "checked 20" and passed.
+paths = sorted(
+    p for p in pathlib.Path(".").rglob("SKILL.md") if ".git/" not in str(p)
+)
+
+for path in paths:
+    lines = path.read_text().splitlines()
+    # `text.split("---")` matched "---" anywhere, so a file with prose before the
+    # opening delimiter, or a closer like "---not-a-delimiter", parsed the wrong
+    # slice and passed. Require the delimiters to be their own lines.
+    if not lines or lines[0].strip() != "---":
+        failures.append(f"{path}: frontmatter must open with '---' on line 1")
+        continue
+    try:
+        end = next(i for i, ln in enumerate(lines[1:], start=1) if ln.strip() == "---")
+    except StopIteration:
+        failures.append(f"{path}: frontmatter has no closing '---' line")
         continue
     checked += 1
     try:
-        data = yaml.safe_load(parts[1])
+        data = yaml.safe_load("\n".join(lines[1:end]))
     except yaml.YAMLError as exc:
         first = str(exc).splitlines()[0]
         failures.append(
