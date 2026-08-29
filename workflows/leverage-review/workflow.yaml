@@ -1,0 +1,96 @@
+id: slp-leverage-review-v1
+name: "Software leverage review"
+description: >
+  Runs the software-leverage-review orchestrator across a repository: 17 leverage
+  point lenses fan out in parallel, findings are deduped, severity/effort are
+  verified deterministically, and the action matrix routes each finding to
+  auto-fix, promote, or bulk. A second phase turns the merged report into a
+  prioritized queue of issue-ready work items.
+type: review
+classification: complex
+
+# The review reads a checked-out repository, so the platform must clone one.
+requires_repos: true
+
+inputs:
+  - name: task
+    description: >
+      What to review, relative to the repo root. Substituted for $ARGUMENTS in
+      the review phase. Use "." for the whole repository, or a path such as
+      "src/payments" to scope the fan-out to a subtree.
+    required: false
+    default: "."
+  - name: maturity_hint
+    description: >
+      Optional override for the maturity stage the orchestrator infers from the
+      target's signals. One of poc, prototype, growing, production,
+      safety-critical. Severity is calibrated against this, so an accurate hint
+      materially changes the output.
+    required: false
+    default: ""
+
+# Workflow scope applies to EVERY phase. The 17 leverage point lenses plus the
+# orchestrator that fans out across them are declared here as one verbose entry:
+# a single source and pin, expanded into one ref per skill name.
+#
+# The layout this relies on is `skills/<name>/SKILL.md` in this repository. The
+# installer's clone-side lookup tries `<name>/`, then `skills/<name>/`, then the
+# clone root, so this repository's layout is found by the second candidate.
+#
+# The pin is a commit sha because `@latest` is rejected by design: a skill ref
+# must denote the same bytes on every install. Re-pin this to a newer commit
+# (and bump the plugin version) when the skills change.
+skills:
+  - source: https://github.com/syntropic137/software-leverage-points
+    version: 1348146ae5fd1659f2022b3c2bef0218292348d4
+    names:
+      - software-leverage-review
+      - architecture
+      - configuration
+      - continuous-delivery
+      - dependencies
+      - developer-experience
+      - documentation
+      - dry
+      - environments
+      - error-handling
+      - logging
+      - principles-and-patterns
+      - purpose-and-scope
+      - security
+      - software-complexity
+      - testing
+      - types
+      - versioning
+
+phases:
+  - id: review
+    name: "Fan out the leverage point lenses"
+    order: 1
+    execution_type: sequential
+    model: sonnet
+    # The orchestrator's own budget is ~10-15 minutes of wall time for a
+    # full 17-lens fan-out, so the phase timeout is set well above it.
+    timeout_seconds: 5400
+    max_tokens: 64000
+    prompt_file: phases/review.md
+    output_artifacts: [leverage-review]
+    # No allowed_tools: this phase MUST be able to dispatch subagents, run the
+    # orchestrator's Python scripts, and write files. Naming a subset here is
+    # how a fan-out silently degrades into a single-pass review.
+    agent:
+      provider: claude
+
+  - id: triage
+    name: "Triage findings into an actionable queue"
+    order: 2
+    execution_type: sequential
+    model: sonnet
+    timeout_seconds: 1800
+    max_tokens: 32000
+    prompt_file: phases/triage.md
+    input_artifacts: [leverage-review]
+    output_artifacts: [leverage-triage]
+    allowed_tools: [Read, Glob, Grep, Write, Bash]
+    agent:
+      provider: claude

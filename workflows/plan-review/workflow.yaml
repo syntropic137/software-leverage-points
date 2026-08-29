@@ -1,0 +1,78 @@
+id: slp-plan-review-v1
+name: "Software leverage review of a plan"
+description: >
+  Gates an implementation plan before any code is written. The
+  software-leverage-review orchestrator fans out across the 17 leverage point
+  lenses with the plan document as the target, then a second phase applies the
+  auto-fix findings to produce a revised plan-v2 and leaves the promoted
+  decisions to the operator.
+type: planning
+classification: standard
+
+# The plan document is read from a cloned repository.
+requires_repos: true
+
+inputs:
+  - name: task
+    description: >
+      Path to the plan document, relative to the repository root
+      (e.g. docs/plans/2026-08-01-payments-rework.md). Substituted for
+      $ARGUMENTS.
+    required: true
+  - name: maturity_hint
+    description: >
+      Optional maturity stage override (poc, prototype, growing, production,
+      safety-critical). Plan reviews rate effort against what the plan commits
+      to, and severity against this stage.
+    required: false
+    default: ""
+
+skills:
+  - source: https://github.com/syntropic137/software-leverage-points
+    version: 1348146ae5fd1659f2022b3c2bef0218292348d4
+    names:
+      - software-leverage-review
+      - architecture
+      - configuration
+      - continuous-delivery
+      - dependencies
+      - developer-experience
+      - documentation
+      - dry
+      - environments
+      - error-handling
+      - logging
+      - principles-and-patterns
+      - purpose-and-scope
+      - security
+      - software-complexity
+      - testing
+      - types
+      - versioning
+
+phases:
+  - id: review-plan
+    name: "Review the plan through every leverage point"
+    order: 1
+    execution_type: sequential
+    model: sonnet
+    timeout_seconds: 5400
+    max_tokens: 64000
+    prompt_file: phases/review-plan.md
+    output_artifacts: [plan-review]
+    agent:
+      provider: claude
+
+  - id: revise-plan
+    name: "Produce plan-v2 from the auto-fix findings"
+    order: 2
+    execution_type: sequential
+    model: sonnet
+    timeout_seconds: 2700
+    max_tokens: 48000
+    prompt_file: phases/revise-plan.md
+    input_artifacts: [plan-review]
+    output_artifacts: [plan-v2]
+    allowed_tools: [Read, Glob, Grep, Write, Bash]
+    agent:
+      provider: claude

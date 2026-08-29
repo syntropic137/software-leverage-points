@@ -86,6 +86,20 @@ claude plugin install /absolute/path/to/software-leverage-points --scope project
 
 See [`docs/local-testing.md`](docs/local-testing.md) for the full local-development loop (persistent install, ephemeral install, `/reload-plugins`).
 
+### Syntropic137
+
+This repository doubles as a Syntropic137 workflow package: `syntropic137-plugin.json`
+at the root plus the workflows under [`workflows/`](workflows/), which run the
+leverage-point fan-out inside an isolated Syntropic137 workspace.
+
+```bash
+syn workflow install syntropic137/software-leverage-points
+syn workflow run slp-leverage-review-v1 -R <owner>/<repo> --task "."
+```
+
+See [`workflows/README.md`](workflows/README.md) for what each workflow does and
+how the skills reach the agent.
+
 ### Other vendors
 
 - Codex: [`docs/README.codex.md`](docs/README.codex.md)

@@ -1,10 +1,29 @@
 {
   "files": [
-    { "path": ".claude-plugin/plugin.json", "field": "version" },
-    { "path": ".claude-plugin/marketplace.json", "field": "plugins.0.version" },
-    { "path": ".codex-plugin/plugin.json", "field": "version" },
-    { "path": ".cursor-plugin/plugin.json", "field": "version" },
-    { "path": "gemini-extension.json", "field": "version" }
+    {
+      "path": ".claude-plugin/plugin.json",
+      "field": "version"
+    },
+    {
+      "path": ".claude-plugin/marketplace.json",
+      "field": "plugins.0.version"
+    },
+    {
+      "path": ".codex-plugin/plugin.json",
+      "field": "version"
+    },
+    {
+      "path": ".cursor-plugin/plugin.json",
+      "field": "version"
+    },
+    {
+      "path": "gemini-extension.json",
+      "field": "version"
+    },
+    {
+      "path": "syntropic137-plugin.json",
+      "field": "version"
+    }
   ],
   "audit": {
     "exclude": [

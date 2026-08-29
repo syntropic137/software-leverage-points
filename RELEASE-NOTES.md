@@ -1,5 +1,15 @@
 # Release Notes
 
+## v0.1.5 (2026-08-29)
+
+Packaging. The repository is now installable as a Syntropic137 workflow package.
+
+- `syntropic137-plugin.json` at the root declares the package to the Syntropic137 installer.
+- `workflows/leverage-review/` runs the full 17-lens fan-out against a cloned repository, then triages the merged findings into a Do now / Decide / Batch queue.
+- `workflows/plan-review/` gates a plan document before implementation and emits a revised `plan-v2.md` from the auto-fix findings, leaving promoted scope decisions to the operator.
+- Both workflows declare the 17 leverage point skills plus the orchestrator at workflow scope, pinned by commit sha. `@latest` is rejected by the platform, so the pin has to be advanced by hand when the skills change.
+- `syntropic137-plugin.json` is registered in `.version-bump.json`, so its version stays in parity with the four vendor manifests.
+
 ## v0.1.1 (2026-05-05)
 
 Docs-only patch. Clarifies `obra/superpowers` as scaffolding-only attribution; this plugin has no runtime dependency on superpowers and no skill invokes a `superpowers:*` skill by name. Removes the README "Compatibility" section and "install both" line, and the corresponding language in `CLAUDE.md`, the PR template, and `marketplace.json` keywords.
