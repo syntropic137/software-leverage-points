@@ -17,11 +17,12 @@ Operator skills are excluded from the default `software-leverage-review` fan-out
 <!-- end:operator-catalog -->
 
 <!-- begin:slp-catalog -->
-## Leverage-point skills (17)
+## Leverage-point skills (18)
 
 | LP |
 |---|
 | [architecture](../skills/architecture/SKILL.md) |
+| [ci-optimization](../skills/ci-optimization/SKILL.md) |
 | [configuration](../skills/configuration/SKILL.md) |
 | [continuous-delivery](../skills/continuous-delivery/SKILL.md) |
 | [dependencies](../skills/dependencies/SKILL.md) |

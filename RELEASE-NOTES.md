@@ -1,5 +1,11 @@
 # Release Notes
 
+## v0.1.5 (2026-09-23)
+
+Add the CI optimization skill for measuring latency, runner consumption, cache
+correctness, and runner/sharding tradeoffs. Link it from continuous delivery and
+include an attributed Linear case-study summary under the skill's references.
+
 ## v0.1.1 (2026-05-05)
 
 Docs-only patch. Clarifies `obra/superpowers` as scaffolding-only attribution; this plugin has no runtime dependency on superpowers and no skill invokes a `superpowers:*` skill by name. Removes the README "Compatibility" section and "install both" line, and the corresponding language in `CLAUDE.md`, the PR template, and `marketplace.json` keywords.

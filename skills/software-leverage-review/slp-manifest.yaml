@@ -17,6 +17,7 @@ version: 1
 generated_by: scripts/regenerate-catalogs.sh
 slps:
   - architecture
+  - ci-optimization
   - configuration
   - continuous-delivery
   - dependencies
