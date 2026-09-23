@@ -11,76 +11,79 @@ Keep repo-specific timings and conventions in calibration documents.
 
 ## Outcomes we are looking for
 
-- Shorter successful validation latency, measured on equivalent workloads.
-- Lower runner consumption or billed cost, measured separately from elapsed time.
-- Preserved coverage, isolation, cache freshness, and truthful merge gates.
+- Faster useful validation. Evidence: successful required-check completion times
+  on equivalent workloads, plus time to the first actionable failure.
+- Less resource waste. Evidence: runner consumption and actual billed cost,
+  reported separately from elapsed time.
+- Trustworthy validation. Evidence: unchanged coverage and isolation guarantees,
+  plus passing cache-invalidation and merge-gate failure-path checks.
 
-## Measure the actual constraint
+## Principles
+
+### 1. Measure comparable work
 
 Distinguish commit-to-required-check completion, first actionable failure, queue
-time, job execution, total runner-minutes, and billed cost. They are different
-objectives. A faster failing run is not evidence of faster successful validation.
-Separate successful, failed, cancelled, retried, and skipped runs; PR, main,
-release, and scheduled events; cold and warm caches. State sample size and dates.
+and execution time, runner-minutes, and billed cost because they answer different
+questions. Separate outcomes (successful, failed, cancelled, retried, skipped),
+events (PR, main, release, scheduled), and cold versus warm caches; faster failure
+is not faster successful validation. State dates and sample size, and record
+runner OS, architecture, toolchain, dependency pins, test count, and cache outcome.
+Reconstruct the merge-critical dependency path from job/step timestamps and logs,
+including required checks in other workflows. Treat workflow update time as a
+screening proxy, not exact merge latency.
 
-Use job/step timestamps and logs to reconstruct the dependency path that delays
-merging. Workflow update time is only a screening proxy, not exact merge latency.
-Include required checks in other workflows. Record runner OS, architecture,
-toolchain, dependency pins, test count, and cache outcome before comparing runs.
+### 2. Prove cache freshness and benefit
 
-## Optimization menu
+Key binary caches by source revision, compiler, target architecture, build
+configuration, and relevant environment; source changes invalidate them even
+without version bumps. Use broad fallback keys only for build inputs that the
+build system revalidates. Inspect subsequent build logs because restoring a
+directory does not prove compilation was avoided. Reusing test results requires
+complete input identity, including dependencies, generated inputs, configuration,
+and external services. Test both invalidation and reuse: file existence alone
+proves neither freshness nor a passing suite.
 
-The following lessons are distilled from [Mufeez Amjad's Linear case study](https://linear.app/now/ci-bottleneck-reworked)
-(2026-09-21), not promised speedups:
+### 3. Preserve every validation guarantee
 
-- Evaluate faster runners and toolchains on the same workload.
-- Remove unnecessary work from prerequisite jobs and minimize checkout scope.
-- Move bookkeeping off the merge-critical path.
-- Reduce repeated setup with suitable images and narrowly scoped installs.
-- Measure cache transfer against rebuilding; a cache can cost more than it saves.
-- Batch tiny checks when shared setup dominates.
-- Avoid replaying unchanged initialization where equivalence is established.
-- Balance shards by measured execution units; split oversized test files.
-- Reduce setup before increasing shard count.
-- Share test module state only through explicit eligibility and reliable cleanup;
-  retain isolation for incompatible tests.
+Before removing duplicate checks, map the remaining owner of every guarantee,
+so faster execution cannot silently omit coverage. Exercise the final gate with
+failed, cancelled, and unexpectedly skipped required jobs, with explicit policy
+for expected conditional skips. Cover shared dependencies, tool/config changes,
+generated inputs, and submodule pins in path filters; unknown diffs must run
+validation. Keep one truthful local entry point so splitting CI does not strand
+checks outside local QA.
 
-## Correctness constraints
+### 4. Reduce repeated setup before adding parallelism
 
-A binary cache must identify source revision, compiler, target architecture,
-build configuration, and relevant environment. A source change without a version
-bump still invalidates it. Broad fallback keys are suitable for reusable build
-inputs only when the build system revalidates them. A restored directory is not
-proof that compilation was avoided. Inspect the subsequent build log.
+Measure setup and test distribution before increasing shards, because each shard
+replicates initialization and consumes concurrency. Balance work at the test
+runner's actual scheduling unit, not an assumed unit. Retain test isolation unless
+explicit eligibility and reliable cleanup establish safe state sharing, as in
+[Linear's case study](references/ci-bottleneck-reworked.md).
 
-Treat cached test results separately: reuse requires a complete input identity,
-including dependencies, generated inputs, configuration, and external services.
-Test both invalidation and reuse. Never accept file existence as proof of a
-current tool or passing suite.
+### 5. Evaluate runners as an operational choice
 
-Before removing duplicate checks, map the remaining owner of every guarantee.
-Exercise the final gate with a failed, cancelled, and unexpectedly skipped
-required job. Expected conditional skips need explicit policy. A shorter run
-that silently omits coverage is a regression.
+Confirm current pricing and repository visibility before claiming savings;
+compare throughput under concurrent PRs rather than one warm laptop run.
+Include power, maintenance, queue contention, network, and cache lifecycle in
+that comparison. On personal hardware, isolate disposable workers from home,
+credentials, the Docker socket, and LAN because public PR code is untrusted even
+without injected secrets. Verify platform and image architecture support:
+native macOS cannot replace Linux service-container jobs. Explore runners when
+requested, but obtain authorization before registering a persistent runner,
+purchasing compute, or changing repository trust; a performance review alone
+does not authorize those changes.
 
-Path filters must cover shared dependencies, tool/config changes, generated
-inputs, and submodule pins. Unknown diffs must run validation. Keep one truthful
-local entry point; splitting CI must not strand checks outside local QA.
+### 6. Return evidence that supports the claim
 
-## Runner decision
+Provide baseline run links, the measured bottleneck and its share, ranked changes,
+and validation results so another reviewer can assess the comparison.
+Distinguish expected latency, resource, and correctness effects, labeling estimates
+and unmeasured outcomes. Test failure paths and compare equivalent hosted runs
+after deployment before claiming achieved speedups. Set a project-specific
+budget and regression trigger because one team's target is not universal.
 
-Confirm current pricing and repository visibility before claiming savings.
-Compare end-to-end throughput under concurrent PRs, not one warm laptop run.
-Include power, maintenance, queue contention, network, and cache lifecycle.
-
-On a personal machine, distinguish an isolated disposable worker from access
-to the developer's home, credentials, Docker socket, and LAN. Public PR code is
-untrusted even without injected secrets. Native macOS is not a replacement for
-Linux service-container jobs; verify platform and image architecture support.
-Explore runners when requested; a performance review does not itself authorize
-registering a persistent runner, purchasing compute, or changing repository trust.
-
-## Red flags
+## Anti-patterns
 
 - Claims of lower cost based only on wall time or runner-minutes.
 - More shards without measuring replicated setup and available concurrency.
@@ -89,14 +92,34 @@ registering a persistent runner, purchasing compute, or changing repository trus
 - Performance changes that weaken test isolation or remove gates without evidence.
 - Hardware migration proposed before identifying where time is spent.
 
-## Evidence to return
+## Recommended tools and practices (as of 2026-09-23)
 
-Provide the baseline and source run links; the bottleneck and its measured share;
-ranked changes with expected latency, resource, and correctness effects; and
-validation results. Label estimates and unmeasured outcomes. For a patch, test
-the failure path and compare equivalent hosted runs after deployment before
-claiming achieved speedups. Establish a project-specific budget and regression
-trigger; do not turn one team's target into a universal threshold.
+These candidates draw on [Mufeez Amjad's Linear case study](references/ci-bottleneck-reworked.md).
+Validate them on the target workload; they are not promised speedups.
+
+### Outcome: faster useful validation
+
+- Use CI job/step timestamps to locate gating work, then narrow prerequisite
+  checkouts and move bookkeeping off the merge path to reduce waiting.
+- Compare runner and toolchain alternatives on identical workloads to determine
+  whether compute or tooling limits feedback.
+- Balance measured test execution units and split oversized files to reduce the
+  slowest shard, rather than adding shards without a setup profile.
+
+### Outcome: less resource waste
+
+- Use suitable images, scoped installs, and batched short checks to amortize
+  repeated setup; measure their transfer and maintenance costs too.
+- Compare cache save/restore with rebuilding to identify caches that add work.
+- Reuse unchanged initialization only when input identity and equivalence are
+  established, so avoided work does not become stale validation.
+
+### Outcome: trustworthy validation
+
+- Exercise cache-hit, miss, and invalidation paths alongside gate failure paths
+  to show the optimization preserves current-source validation.
+- Use explicit state-sharing eligibility and cleanup checks; retain isolation
+  for incompatible tests so throughput gains preserve test meaning.
 
 ## References
 

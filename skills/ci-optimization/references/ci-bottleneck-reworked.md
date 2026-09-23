@@ -10,6 +10,8 @@ content_type: "attributed-summary"
 
 # Linear CI case study
 
+Read for context behind the CI optimization recommendations and the original source.
+
 Attribution: Mufeez Amjad, Linear. [Read the original article](https://linear.app/now/ci-bottleneck-reworked).
 This is a selective paraphrased summary, not an archived copy of the article.
 
