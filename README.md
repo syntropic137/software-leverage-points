@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/banner.svg" alt="Syntropic137 Leverage Points" width="100%">
+</p>
+
 # software-leverage-points
 
 A Claude Code plugin that ships a library of skills for reviewing software through high-leverage lenses: testing, logging, architecture, dependencies, security, configuration, types, documentation, and more. Each lens is its own skill, and an orchestrator (`software-leverage-review`) fans out parallel subagents (one per lens) to review a plan, a PR, or a whole codebase.
