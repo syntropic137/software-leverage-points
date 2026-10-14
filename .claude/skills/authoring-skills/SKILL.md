@@ -2,6 +2,8 @@
 name: authoring-skills
 description: Use when authoring or auditing a Claude skill (`SKILL.md` with YAML frontmatter), refining an existing skill, or reviewing a skill against a chassis. Trigger phrases include "write a skill", "author a skill", "audit this skill", "review the skill", "skill structure", "skill shape", "SKILL.md template", "skill description", "skill frontmatter", "skill not triggering". Covers Claude Code skills, plugin skills, personal `~/.claude/skills`, and project-local `.claude/skills/`. Applies to principle-doc skills (durable knowledge about a concern) and procedural skills (workflow with input/output). Do NOT use for slash commands, hooks, or MCP servers; those have different shapes.
 placement: "Meta-skill. Install in `.claude/skills/<skill-name>/` (repo-local meta scope) or `plugins/<meta-plugin>/skills/<skill-name>/` (when exported via a meta plugin). NOT alongside domain-specific skills under `skills/` or `plugins/<domain-plugin>/skills/`. The rule: skills that teach how to author other skills live at the meta level, separate from skills that teach a specific domain concern."
+metadata:
+  internal: true
 ---
 
 # Authoring Skills

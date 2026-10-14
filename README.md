@@ -74,6 +74,16 @@ Multi-vendor scaffolding patterns (directory layout, manifest mirroring across C
 
 This README is the explanation layer: mental model, rationale, and install instructions. The reference inventory of all shipped skills lives in `docs/leverage-points.md`. How-to guides for individual skills live in each skill's own `SKILL.md`. The split follows Diátaxis (explanation, how-to, reference) so each document has one job.
 
+### Any agent, with `npx skills`
+
+Installs every skill under `skills/` into Claude Code (`~/.claude/skills`) and Codex (`~/.agents/skills`). Drop `-g` to install into the current project instead.
+
+```bash
+npx skills add syntropic137/software-leverage-points --skill '*' -a claude-code -a codex -g -y
+```
+
+The repo's own maintainer skills under `.claude/skills/` are marked `metadata.internal: true`, so `npx skills` does not install them. Set `INSTALL_INTERNAL_SKILLS=1` when working on this repo.
+
 ### Claude Code
 
 **From GitHub (marketplace):**
