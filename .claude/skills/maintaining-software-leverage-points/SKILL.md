@@ -1,6 +1,8 @@
 ---
 name: maintaining-software-leverage-points
 description: "Use when maintaining the plugin chassis (not the SLP content): bumping versions, regenerating catalogs, running QA, configuring CI, shipping releases, or onboarding a contributor to the repo's automation surface."
+metadata:
+  internal: true
 ---
 
 # Maintaining Software Leverage Points
