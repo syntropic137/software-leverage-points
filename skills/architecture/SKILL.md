@@ -27,6 +27,8 @@ Dependencies point from volatile details toward stable abstractions. High-level 
 
 When the arrow points the other way, every detail change ripples upward through the stable core.
 
+Cross-reference: this skill reviews the dependency structure that exists; the [`boundary-hardening`](../boundary-hardening/SKILL.md) skill carries the active discipline of extracting a seam that does not exist yet, inverting the dependency across it, pinning it with behavioral tests, and ratcheting it so it cannot silently re-couple. Cross-reference: the [`extensibility`](../extensibility/SKILL.md) skill carries what an inverted dependency becomes when the implementation is supplied by an outside author rather than the composition root.
+
 ### 3. Layer discipline (one axis of change per layer)
 
 Validation, pricing, authorization, and workflow rules are domain concerns; they do not live in HTTP handlers, ORM models, or view templates. Layering exists so each module changes for one reason. When business logic lives in the transport layer, it cannot be reused, tested without spinning the layer up, or moved without rewriting it.
