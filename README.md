@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/banner.svg" alt="Syntropic137 Leverage Points" width="100%">
+</p>
+
 # software-leverage-points
 
 A Claude Code plugin that ships a library of skills for reviewing software through high-leverage lenses: testing, logging, architecture, dependencies, security, configuration, types, documentation, and more. Each lens is its own skill, and an orchestrator (`software-leverage-review`) fans out parallel subagents (one per lens) to review a plan, a PR, or a whole codebase.
@@ -69,6 +73,16 @@ Multi-vendor scaffolding patterns (directory layout, manifest mirroring across C
 ## Install
 
 This README is the explanation layer: mental model, rationale, and install instructions. The reference inventory of all shipped skills lives in `docs/leverage-points.md`. How-to guides for individual skills live in each skill's own `SKILL.md`. The split follows Diátaxis (explanation, how-to, reference) so each document has one job.
+
+### Any agent, with `npx skills`
+
+Installs every skill under `skills/` into Claude Code (`~/.claude/skills`) and Codex (`~/.agents/skills`). Drop `-g` to install into the current project instead.
+
+```bash
+npx skills add syntropic137/software-leverage-points --skill '*' -a claude-code -a codex -g -y
+```
+
+The repo's own maintainer skills under `.claude/skills/` are marked `metadata.internal: true`, so `npx skills` does not install them. Set `INSTALL_INTERNAL_SKILLS=1` when working on this repo.
 
 ### Claude Code
 

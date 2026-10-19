@@ -1,6 +1,8 @@
 ---
 name: authoring-software-leverage-points
 description: Use when authoring or refining any skill in the software-leverage-points plugin (the 17 SLPs, the 3 operator skills, operator-synthesis references, or L2 templates). Captures the architectural model, the section shape per skill type, the cross-reference and continual-improvement conventions, and the house rules so authoring stays consistent.
+metadata:
+  internal: true
 ---
 
 # Authoring Software Leverage Points
