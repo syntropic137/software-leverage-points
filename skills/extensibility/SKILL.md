@@ -70,7 +70,7 @@ The review requires a **stated trust tier per surface, with controls that match 
 
 - **In-process, first-party or trusted:** ordinary native in-process loading gives the extension the host's ambient authority, so the effective controls are review, provenance, and blast-radius limits rather than isolation.
 - **In-process, untrusted:** requires a real isolation mechanism, meaning a runtime that actually confines the code (a managed sandbox or interpreter with no ambient host access). A capability-scoped host interface is necessary but not sufficient on its own: it narrows what a *cooperative* extension can reach through the API, while arbitrary native code in the same process can bypass the API entirely.
-- **Out-of-process, local:** isolation comes from the process boundary; the controls are the interface surface, resource limits, and what the host hands across.
+- **Out-of-process, local:** the process boundary contains crashes and memory corruption, but it is not a security boundary on its own: a child inherits the host user's credentials, filesystem and network authority unless they are explicitly dropped (a separate user, a sandbox profile, seccomp or landlock, a container). The controls are those restrictions plus the interface surface, resource limits, and what the host hands across.
 - **Remote (webhooks, API integrations):** the threats are authentication, replay, delivery semantics, quotas, and tenant isolation, and a local code sandbox is irrelevant.
 
 The invariant across tiers is **least privilege**: authority is granted explicitly and narrowly rather than held ambiently. The defect is a surface whose trust tier is unstated, or whose controls do not match the tier it claims.

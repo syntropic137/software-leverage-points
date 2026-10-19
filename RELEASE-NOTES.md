@@ -1,5 +1,11 @@
 # Release Notes
 
+## v0.2.0 (2026-10-19)
+
+Add the boundary-hardening and extensibility skills (July 2026 work) with
+related cross-references in architecture, error-handling, principles-and-patterns,
+security, software-complexity, testing and continuous-delivery.
+
 ## v0.1.5 (2026-09-23)
 
 Add the CI optimization skill for measuring latency, runner consumption, cache
