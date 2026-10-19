@@ -17,6 +17,8 @@ version: 1
 generated_by: scripts/regenerate-catalogs.sh
 slps:
   - architecture
+  - boundary-hardening
+  - ci-optimization
   - configuration
   - continuous-delivery
   - dependencies
@@ -25,6 +27,7 @@ slps:
   - dry
   - environments
   - error-handling
+  - extensibility
   - logging
   - principles-and-patterns
   - purpose-and-scope

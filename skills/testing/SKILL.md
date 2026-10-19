@@ -66,7 +66,7 @@ Every bug fix starts with a failing test that reproduces the bug. Then fix. Then
 
 Don't fix without first writing the failing test.
 
-Cross-reference: the [`principles-and-patterns`](../principles-and-patterns/SKILL.md) skill carries the stewardship discipline (Boy Scout Rule, Broken Windows, technical debt as a managed quantity); a green regression suite is the precondition that lets debt be paid down by refactoring without fear. Cross-reference: the [`software-complexity`](../software-complexity/SKILL.md) skill carries the cost framing (maintenance dominates implementation) that explains why the regression-test investment pays back over a long-lived codebase.
+Cross-reference: the [`boundary-hardening`](../boundary-hardening/SKILL.md) skill carries the narrower claim that a module boundary is only as hard as the behavioral suite pinning it; tests that assert through a port rather than on its internals are what make the implementation behind that port replaceable. Cross-reference: the [`principles-and-patterns`](../principles-and-patterns/SKILL.md) skill carries the stewardship discipline (Boy Scout Rule, Broken Windows, technical debt as a managed quantity); a green regression suite is the precondition that lets debt be paid down by refactoring without fear. Cross-reference: the [`software-complexity`](../software-complexity/SKILL.md) skill carries the cost framing (maintenance dominates implementation) that explains why the regression-test investment pays back over a long-lived codebase.
 
 ### 6. Readability via patterns
 

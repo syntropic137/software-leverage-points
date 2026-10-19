@@ -21,6 +21,8 @@ This principle scopes most strongly to languages with sum types or discriminated
 
 The principle is: callers can dispatch on error kind without parsing strings. The red flag is "all errors are the same generic type, so callers either catch nothing or catch everything."
 
+Cross-reference: the [`boundary-hardening`](../boundary-hardening/SKILL.md) skill treats the taxonomy as a member of a module's contract rather than a property of one implementation: where a seam is meant to make its implementation replaceable, an unstated error taxonomy means each implementation invents its own failures and callers couple to whichever shipped first.
+
 ### 2. Propagate or handle deliberately; do not swallow (scope: bare-catch ban applies to exception-based languages; the analog applies to ignored Result returns in Result-based languages)
 
 Errors must flow to a place that decides what to do with them. Catch-and-ignore (`try: ... except: pass`, `catch (e) {}`, ignored `Result` return values) hides the signal; the system limps on in a broken state and the operator has no thread to pull on when the consequence surfaces later, often far from the cause.

@@ -57,6 +57,8 @@ High-level modules (use cases, domain logic) should not depend on low-level conc
 
 The principle is: dependencies are declared and visible, not buried. The red flag is "dependencies imported deep in a function body or fetched from a global registry," not "did not use constructor injection."
 
+Cross-reference: the [`extensibility`](../extensibility/SKILL.md) skill carries what these mechanisms become when the injected implementation is supplied by someone who is not the author: a plug point, with the documentation, versioning, and trust obligations of a public interface.
+
 ### 5. Composition over inheritance for code reuse (scope: where reuse is the goal)
 
 This principle scopes to cases where the goal is code reuse, not substitutability. Inheritance encodes both an interface contract and an implementation reuse; using it for reuse alone couples the subclass to the superclass implementation, and refactors at the top break everything below.

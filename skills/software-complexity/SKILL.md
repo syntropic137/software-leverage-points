@@ -48,6 +48,8 @@ When the scope applies: wait for three concrete cases before extracting. Two cas
 
 The corollary, from Sandi Metz: the wrong abstraction is more expensive than duplication. When a candidate abstraction would force unrelated cases to share a shape they should not share, the right move is to leave the duplication and revisit at the third case.
 
+Cross-reference: the [`boundary-hardening`](../boundary-hardening/SKILL.md) skill applies this rule to ports specifically, where a port extracted for one implementation with no plausible second one is speculative indirection carrying a contract that someone must now maintain.
+
 ### 5. Make the common case fast and obvious (asymmetric simplicity)
 
 When an API forces the common caller to write boilerplate so the rare caller can be brief, every common-case use pays a tax that compounds across the system. Defaults should favor the common configuration; the rare configuration is allowed to be longer.

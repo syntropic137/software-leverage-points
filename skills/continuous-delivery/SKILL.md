@@ -49,6 +49,12 @@ Long-batch jobs (full-matrix, performance regressions, fuzz, mutation) inherit a
 
 Cross-reference: the [`developer-experience`](../developer-experience/SKILL.md) skill carries the local-inner-loop side of the same fast-feedback discipline. The gate runs the same scripts the contributor runs locally (recipes-call-scripts, principle 5 there), so what passes locally passes the gate by construction.
 
+#### CI optimization
+
+For slow CI, excessive runner usage, cache design, sharding, or runner selection,
+read [CI optimization](../ci-optimization/SKILL.md). It provides measurement,
+correctness, and validation guidance grounded in Linear's CI case study.
+
 ### 6. Flaky tests are quarantined or fixed, not retried into green
 
 A flaky test is either a bug in the test, a bug in the system, or a real race. Retries answer none of those questions and erode trust in the suite (developers stop reading failures, then stop running it locally). The discipline: detect flakes, quarantine them out of the gate so they cannot block work, and fix them on a tracked cadence.
