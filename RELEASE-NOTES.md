@@ -1,5 +1,12 @@
 # Release Notes
 
+## v0.2.3 (2026-10-20)
+
+Add a Rust build-artifact and disk reference to ci-optimization: why target
+dirs balloon, levers ranked by measured effect (debuginfo, incremental, caps,
+trim-paths), sccache and shared target dir tradeoffs, clone dedup, and the
+checks that make automatic cleanup safe.
+
 ## v0.2.2 (2026-10-20)
 
 Add principle 10 to architecture, command parity: every application
