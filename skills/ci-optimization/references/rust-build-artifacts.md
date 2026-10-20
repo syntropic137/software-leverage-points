@@ -122,6 +122,16 @@ Across checkouts at different commits the gain is smaller. Without
 `trim-paths`, four CI verify slots shared only 16% of their dependency bytes by
 name and size.
 
+Measured on a live developer machine (2026-10), clone dedup did not pay:
+with a 24-hour minimum age, nothing qualified, because every target dir that
+old was one the cap evicts anyway. Without the age limit, 61G of 384G (16%)
+was clonable, all of it in dirs written within the last day, so capturing it
+meant swapping files under active checkouts. `debug = "line-tables-only"`
+shrank one fresh target dir by 63% (see the levers table) with no live-file
+changes.
+Measure your own trees before building dedup; it pays when many idle
+checkouts of one commit sit side by side.
+
 ## Cleanup that does not break builds
 
 A cap is only safe if it does not delete something in use. The checks that held
@@ -184,7 +194,8 @@ before evicting more.
   the environment), and an explicit `SCCACHE_CACHE_SIZE`.
 - `trim-paths = "all"` and no build-time absolute paths in non-test code, so
   checkouts of one commit produce mostly identical artifacts.
-- Copy-on-write clone dedup on APFS, btrfs or XFS once artifacts are identical.
+- Copy-on-write clone dedup on APFS, btrfs or XFS once artifacts are identical,
+  and only after measuring: in the case above it was not worth it.
 
 ### Outcome: cleanup never breaks a build
 
