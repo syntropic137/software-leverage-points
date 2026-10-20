@@ -127,7 +127,8 @@ with a 24-hour minimum age, nothing qualified, because every target dir that
 old was one the cap evicts anyway. Without the age limit, 61G of 384G (16%)
 was clonable, all of it in dirs written within the last day, so capturing it
 meant swapping files under active checkouts. `debug = "line-tables-only"`
-removes more of the same bytes (63% per dir) with no live-file changes.
+shrank one fresh target dir by 63% (see the levers table) with no live-file
+changes.
 Measure your own trees before building dedup; it pays when many idle
 checkouts of one commit sit side by side.
 
