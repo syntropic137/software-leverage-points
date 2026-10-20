@@ -1,5 +1,11 @@
 # Release Notes
 
+## v0.2.4 (2026-10-20)
+
+ci-optimization Rust reference: record the measured clone-dedup result (not
+worth it on a live machine: 16% clonable, all in active dirs) next to the
+cheaper debuginfo lever.
+
 ## v0.2.3 (2026-10-20)
 
 Add a Rust build-artifact and disk reference to ci-optimization: why target
