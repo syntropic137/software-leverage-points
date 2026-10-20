@@ -124,6 +124,7 @@ Validate them on the target workload; they are not promised speedups.
 ## References
 
 - [CI bottleneck reworked: Linear case study](references/ci-bottleneck-reworked.md): read on demand for the optimization menu's context and the original article link.
+- [Rust build artifacts and disk](references/rust-build-artifacts.md): for Rust recommendations, read when `target/` dirs fill disks or when weighing sccache, a shared target dir, cleanup tools or dedup across worktrees.
 - [GitHub Actions billing](https://docs.github.com/en/billing/concepts/product-billing/github-actions): verify current economics.
 - [Self-hosted runner reference](https://docs.github.com/en/actions/reference/runners/self-hosted-runners): platform constraints.
 - [Secure use reference](https://docs.github.com/en/actions/reference/security/secure-use): runner trust boundaries.
