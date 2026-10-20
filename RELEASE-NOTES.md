@@ -2,9 +2,10 @@
 
 ## v0.2.2 (2026-10-20)
 
-Add principle 10 to architecture, command parity: every UI action is an
-application-layer command reachable through one entry point by the API, the
-CLI and agents, enforced as a fitness function.
+Add principle 10 to architecture, command parity: every application
+capability in the UI is a command or query behind one entry point, exposed
+over the API and CLI where agents or scripts drive the system, enforced as a
+fitness function.
 
 ## v0.2.0 (2026-10-19)
 
