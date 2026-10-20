@@ -1,6 +1,6 @@
 ---
 name: architecture
-description: "Use when reviewing architectural concerns: module boundaries, dependency direction, layer discipline, bounded-context isolation, ADR coverage, premature abstraction, and structural fitness for change"
+description: "Use when reviewing architectural concerns: module boundaries, dependency direction, layer discipline, bounded-context isolation, ADR coverage, premature abstraction, command parity (every application capability in the UI reachable as a command or query through one entry point, exposed over API and CLI where agents or scripts drive the system), and structural fitness for change"
 ---
 
 # Architecture
@@ -88,6 +88,16 @@ For the deep-dive (metric vocabulary, fitness function categories, system-wide c
 
 Cross-reference: the [`types`](../types/SKILL.md) skill carries the same fitness-function pattern applied to type-system invariants the checker cannot enforce alone (silent `Any` leakage, untyped `dict` returns, escape-hatch sprawl). The [`dependencies`](../dependencies/SKILL.md) skill carries the pattern applied to supply-chain commitments (zero-dep entry points, transitive depth caps, package-count budgets); see [dependencies/dependency-minimization/README.md](../dependencies/dependency-minimization/README.md) for the dependency-specific instances. The [`security`](../security/SKILL.md) skill carries the pattern applied to committed security rules (no `eval` outside sandbox, no string-concat SQL, no plaintext secrets in logs). The [`environments`](../environments/SKILL.md) skill carries the pattern applied to committed parity rules (runtime-version drift, image-content audit, dependency-tree drift, seed-data minimums).
 
+### 10. Command parity: one entry point, every client (scope: systems with interactive clients)
+
+Every application capability a person can reach in a user interface (anything that changes or reads domain state) is an application-layer command or query first, and every client reaches it through that one entry point. Presentation state (focus, scroll, panel layout, an unsent draft) stays in the client; it is not a capability. The layering runs: **domain model** (the rules) under an **application layer** with a single entry point (command and query handlers, CQRS-style), wrapped by an **API** that exposes every command and query, wrapped by a **CLI** that exposes the same set. The API and CLI layers are the system's automation contract: required when agents, scripts or operators are meant to drive the system, which is the case this principle targets. A system with no such clients still keeps behavior in the application layer, so adding the API and CLI later is an adapter, not a rewrite. The graphical or spatial UI is one more client of that entry point, next to the CLI, scripts, tests and agents. No capability exists only inside a client.
+
+The payoff is that anything a human can do, an agent or a script can do too, with the same validation, authorization and audit trail, because they run the same handler. Configuration becomes a sequence of commands instead of hand-edited state, so a prompt ("add three screens to this workstation") can be carried out by an agent calling the CLI. Tests drive the system through the same commands the UI sends. Behavior cannot drift between clients, because none of them owns behavior.
+
+Enforce it as a fitness function (principle 9) rather than a review habit: every UI action that changes or reads domain state maps to a named command or query, and a check fails when such an action has no command, when a command is missing from the API or CLI the automation contract promises, or when a client mutates state without going through the entry point. A command registry the API, CLI and UI are generated from, or a parity test that diffs their lists, makes the check mechanical.
+
+This is the client-facing face of principles 2 and 3: the core owns the behavior and the clients are adapters on the driving side of a hexagonal architecture.
+
 ## Red Flags - STOP
 
 - Architectural decision (database swap, new service boundary, framework replacement) shipped without an ADR or rationale comment in the diff
@@ -105,6 +115,8 @@ Cross-reference: the [`types`](../types/SKILL.md) skill carries the same fitness
 - The system has no named architectural characteristics; the "non-functional requirements" are implicit
 - Architectural rules exist only in code review checklists, never in CI; no fitness functions for the named characteristics
 - Code metrics (coupling, instability, abstractness, cyclomatic / cognitive complexity, import direction) trend monotonically worse and nothing in the pipeline notices
+- A UI action that changes domain state with no corresponding application command: the capability exists only in the client, so agents, scripts and tests cannot reach it (command parity violation)
+- In a system meant to be driven by agents or scripts, the CLI or API lags the UI's application capabilities, or a client mutates state directly instead of through the application entry point
 
 ## Rationalization Prevention
 
@@ -123,6 +135,7 @@ Cross-reference: the [`types`](../types/SKILL.md) skill carries the same fitness
 | "Reads and writes can share one model" | Until they can't; CQRS is cheap before scale forces it and expensive after |
 | "We have non-functional requirements, we just haven't written them down" | Unnamed characteristics aren't designed for; they degrade silently |
 | "The architecture rules are in the wiki / code review checklist" | Rules unenforced rot; mechanize them as fitness functions or accept they will erode |
+| "This action is UI-only; nobody will script it" | Agents and tests are clients too; a capability without a command is one they cannot reach, and its logic drifts into the client |
 
 ## Key Patterns
 
@@ -231,6 +244,8 @@ Soft sketch; not a checklist. Where appropriate is shaped by the target's maturi
 - **Matthew Skelton and Manuel Pais, *Team Topologies* (2019).** Backs principle 8 from the design-imperative direction. Stream-aligned teams and the inverse-Conway maneuver: choose the team shape, then design seams to match.
 - **Martin Kleppmann, *Designing Data-Intensive Applications* (2017).** Backs the "Why This Matters" framing on reliability, maintainability, and scalability as the outcomes architecture serves; corroborates principle 8 (CQRS) and principle 9 (architectural characteristics) at the data-system level.
 - **Neal Ford, Rebecca Parsons, Patrick Kua, and Pramod Sadalage, *Building Evolutionary Architectures* (2nd ed., 2023).** Backs principle 9. Architectural characteristics, fitness functions as the unit-test analogue for those characteristics, system-wide fitness function for trade-off evaluation, and incremental change under guard rails. Deep-dive in [fitness-functions/README.md](fitness-functions/README.md).
+- **Greg Young, "CQRS Documents" (2010), and Martin Fowler, "CQRS" (bliki, 2011).** Back principle 10's vocabulary of explicit task-based commands and queries, and corroborate the principle 8 CQRS callout. Fowler also cautions against applying CQRS indiscriminately. Neither argues for API and CLI parity; routing every client through one command entry point is this skill's synthesis.
+- **Richard Pawson and Robert Matthews, *Naked Objects* (Wiley, 2002).** Corroborates principle 10 from the UI direction: every user action is a behavior of the domain model, and the interface is generated from it rather than holding logic of its own.
 - **Martin Dilger, *Understanding Event Sourcing* (2024).** Backs the principle 8 callout to event sourcing and CQRS. Source for the vocabulary (events, streams, projections, event store), the event-modeling notation, and the given/when/then testing pattern. Deep-dive in [event-sourcing/README.md](event-sourcing/README.md).
 
 ## Suggested technologies (as of 2026-04-28)
