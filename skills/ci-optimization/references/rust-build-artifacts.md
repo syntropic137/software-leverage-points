@@ -66,7 +66,9 @@ does not remove any. What it buys is compile time, and only when keys match:
   checkout its own key space: cross-checkout hits were about 0%. Set the target
   dir with `--target-dir` or `build.target-dir` instead: hits rose to about 84%.
 - Proc-macro crates, binaries, tests and the final link are not cached, and
-  crates downstream of proc-macros miss more often. In the case above, with
+  crates downstream of proc-macros miss more often. A proc-macro that reads
+  files cargo does not track can also produce a stale hit, so keep such inputs
+  declared or avoid caching those crates. In the case above, with
   `CARGO_INCREMENTAL=0` at `-j4`, a build reusing the same target path (near
   100% hits) still took 94 s against a 130 s cold build: that is the
   uncacheable floor.
@@ -108,7 +110,11 @@ scripts, native tools and nondeterministic inputs still differ), so compare
 content hashes before sharing anything. Matching bytes can be stored once with
 copy-on-write clones (`clonefile` on
 APFS, reflinks on btrfs or XFS). Each path keeps its own file, so cargo's
-in-place writes and binary swaps stay isolated. Hardlinks are not a substitute:
+in-place writes and binary swaps stay isolated. Copy-on-write protects only
+writes after the clone: a build that rewrites the file between the hash and the
+clone would be overwritten with stale bytes. Hold cargo's locks on both target
+dirs, recheck size and mtime just before an atomic rename of the clone into
+place, and skip anything recently written. Hardlinks are not a substitute:
 a writer that truncates one link changes every copy. Ext4 has neither clones
 nor reflinks, so dedup there means a different filesystem.
 
@@ -121,9 +127,11 @@ name and size.
 A cap is only safe if it does not delete something in use. The checks that held
 up under review and fixture tests:
 
-- Identify target dirs by cargo's markers (`CACHEDIR.TAG` or `.rustc_info.json`
-  plus a `.fingerprint` build tree), never by name, and refuse any tree that
-  holds `Cargo.toml`, `.git` or `src/`.
+- Search only configured cleanup roots. Identify target dirs by cargo-specific
+  evidence, never by name: a `.fingerprint` build tree plus either cargo's
+  `CACHEDIR.TAG` (whose comment names cargo) or `.rustc_info.json`. A bare
+  `CACHEDIR.TAG` marks any cache, not only cargo's. Refuse any tree that holds
+  `Cargo.toml`, `.git` or `src/`.
 - Skip a dir when a cargo build lock in it is held (`.cargo-lock`,
   `.cargo-build-lock`), when a process runs a binary from it, or when a process
   has its working directory anywhere in the owning checkout.
