@@ -53,6 +53,15 @@ generated inputs, and submodule pins in path filters; unknown diffs must run
 validation. Keep one truthful local entry point so splitting CI does not strand
 checks outside local QA.
 
+A gate that runs the trunk's copy of its own script, so a change cannot weaken
+it, must still let a change fix it. Otherwise a gate broken on trunk blocks
+every change, its own fix included, until someone bypasses all gates. Give such a
+gate a probe that loads the trunk's copy and judges nothing. When the gate is red,
+the change edits a file the gate takes from trunk, and the probe fails on a clean
+trunk checkout, run the change's own copy, which must pass. A healthy gate keeps
+its trunk verdict, so editing its script never bypasses it. Do not use an empty
+range as the probe: a gate that refuses an empty range by design reads as broken.
+
 ### 4. Reduce repeated setup before adding parallelism
 
 Measure setup and test distribution before increasing shards, because each shard

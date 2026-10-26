@@ -216,6 +216,11 @@ Cross-reference: the [`developer-experience`](../developer-experience/SKILL.md) 
 ❌ Deploy uses a long-lived AWS access key checked into the repo or a shared dev laptop
 ```
 
+```
+✅ Gate runs trunk's copy of its script; when a probe shows that copy is broken on trunk, a change to the script runs its own new copy, which must pass
+❌ Gate broken on trunk blocks every change, its own fix included; the only way out is a bypass that disables every gate
+```
+
 ## Why This Matters
 
 Continuous delivery is the discipline that turns delivery from a high-stakes event into a routine, low-stakes activity. The cost of getting it wrong is paid at every release: in stress, in rollback ambiguity, in incidents that compound because recovery is uncertain, in slow CI that pushes teams toward larger less frequent batches (which makes everything worse), in mainline drift that erodes trust in any green signal.
