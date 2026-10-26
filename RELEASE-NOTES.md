@@ -1,5 +1,12 @@
 # Release Notes
 
+## v0.2.5 (2026-10-26)
+
+Self-testing gates: a gate that runs trunk's copy of its own script gets a
+probe, so when trunk's copy is broken a change to the script runs its own new
+copy instead of blocking every change, its fix included (ci-optimization
+principle 3, continuous-delivery key pattern).
+
 ## v0.2.4 (2026-10-20)
 
 ci-optimization Rust reference: record the measured clone-dedup result (not
