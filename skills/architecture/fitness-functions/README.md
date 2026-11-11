@@ -102,6 +102,7 @@ Fitness functions should encode outcomes wherever possible. When the only availa
 
 - **Named characteristics with no fitness function.** The characteristic is aspirational, not enforced. It will degrade.
 - **Fitness functions that exist but do not gate.** The pipeline runs the check and ignores the result. Equivalent to no check.
+- **Gates that fail open on absent or malformed measurement.** The sensor cannot locate its input (coverage table missing, timing null or NaN, output format drifted) and silently skips the check or assumes a passing value. Worse than no gate: the dashboard reports green while the characteristic is entirely unguarded. The rule is fail closed in every mode: absent or malformed measurement is a hard failure under both advisory and enforce; advisory may soften a measured breach to a warning, never a missing measurement. The classic shapes are a silent default (coverage parser returns 100 when the column is missing) and an advisory mode that swallows the violation it was supposed to surface.
 - **Implementation-shaped checks instead of outcome-shaped.** Brittle to refactoring; the check fails on safe changes and passes on unsafe ones.
 - **Only static, never dynamic** (or only dynamic, never static). Half the failure modes are invisible. A mature system has both.
 - **Only triggered, never continual.** Production-only failures (load, scale, real workload patterns) are missed.
