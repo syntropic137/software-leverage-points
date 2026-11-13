@@ -94,7 +94,7 @@ The practical inversion: **reducing maintenance cost matters more than reducing 
 - **Law of Simplicity.** The ease of maintenance is proportional to the simplicity of the individual pieces.
 - **Law of Testing.** The degree to which you know your software behaves is the degree to which you have accurately tested it.
 
-Together they motivate the rest of this skill: deep modules, bounded complexity, orthogonality, and the rule of three are not aesthetic preferences; they are the levers that reduce the maintenance term. Cross-reference: the [`testing`](../testing/SKILL.md) skill carries the operational form of the Law of Testing; the [`principles-and-patterns`](../principles-and-patterns/SKILL.md) skill carries the stewardship discipline (Broken Windows, Boy Scout Rule, managed technical debt) that prevents the maintenance cost from compounding silently between principled refactors.
+Together they motivate the rest of this skill: deep modules, bounded complexity, orthogonality, and the rule of three are not aesthetic preferences; they are the levers that reduce the maintenance term. Cross-reference: the [`testing`](../testing/SKILL.md) skill carries the operational form of the Law of Testing; the [`principles-and-patterns`](../principles-and-patterns/SKILL.md) skill carries the stewardship discipline (Broken Windows, Boy Scout Rule, managed technical debt) that prevents the maintenance cost from compounding silently between principled refactors. The [`dependencies`](../dependencies/SKILL.md) skill applies the maintenance term to adopted code: every dependency is code the team maintains without having written it.
 
 ## Red Flags - STOP
 
