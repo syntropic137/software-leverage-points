@@ -111,6 +111,25 @@ Where the registry serves over HTTPS to a trusted certificate authority, the typ
 
 Cross-reference: the [`developer-experience`](../developer-experience/SKILL.md) skill consumes the setup-CLI / bootstrap pattern this skill documents (the syntropic137-npx zero-runtime-dep example), pairing the supply-chain stance with the single-command-onboarding stance for end-user-facing setup surfaces.
 
+### 13. Strive for zero; adopt down a ladder, and weigh the bus factor
+
+Principle 10 says fewer and shallower. This principle is the order in which to decide, because each
+step down the ladder adds a trust relationship and a maintenance cost the team carries for as long as the
+code lives.
+
+1. **Zero dependencies.** First ask whether the need is real (see [`purpose-and-scope`](../purpose-and-scope/SKILL.md)), then whether the platform or standard library already covers it.
+2. **Write the small, simple version yourself.** A helper the team owns, reviews and tests is usually cheaper over its life than a package, especially when an agent can write and test it in minutes. Keep it simple: the effort of maintenance, not of implementation, decides the long-term cost (the [`software-complexity`](../software-complexity/SKILL.md) skill carries the reasoning).
+3. **A dependency that itself has zero dependencies.** If you must adopt, adopt a leaf: the tree stays one layer deep.
+4. **A shallow, well-maintained dependency.** Only when the problem is large or genuinely shared (frameworks, runtimes, crypto primitives you must not write yourself), and then with the full checks of principles 1-12.
+
+At steps 3 and 4, weigh the **bus factor**. A dependency with one active maintainer is a long-term reliance on one person: when they stop, the team inherits the code anyway, now without having chosen it. For such a dependency, decide up front between three answers and write the reason down:
+
+- adopt it and accept the risk (small, stable, easily replaced);
+- fork it and own it (only when the team can afford to maintain it: a fork is a new maintenance burden, not a free copy);
+- write a simpler implementation of the part actually used (often the smallest surface, and the usual answer when only a fraction of the library is needed).
+
+The aim behind all of it is a smaller surface: less code shipped, fewer trust relationships, fewer moving parts to patch. Simpler software is easier to maintain, and easier maintenance is what keeps software valuable over time.
+
 ## Red Flags - STOP
 
 - Lockfile not committed in an ecosystem that has one, or out of sync with the manifest

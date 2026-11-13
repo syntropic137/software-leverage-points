@@ -1,5 +1,11 @@
 # Release Notes
 
+## v0.2.5 (2026-11-13)
+
+Add principle 13 to dependencies: strive for zero dependencies and adopt down a ladder
+(zero, write the simple version, a zero-dependency leaf, a shallow maintained dependency), weigh
+the bus factor (adopt, fork and own, or write the used part), and keep the surface small.
+
 ## v0.2.4 (2026-10-20)
 
 ci-optimization Rust reference: record the measured clone-dedup result (not
