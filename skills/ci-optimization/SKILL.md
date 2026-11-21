@@ -125,6 +125,7 @@ Validate them on the target workload; they are not promised speedups.
 
 - [CI bottleneck reworked: Linear case study](references/ci-bottleneck-reworked.md): read on demand for the optimization menu's context and the original article link.
 - [Rust build artifacts and disk](references/rust-build-artifacts.md): for Rust recommendations, read when `target/` dirs fill disks or when weighing sccache, a shared target dir, cleanup tools or dedup across worktrees.
+- [Rust test speed](references/rust-test-speed.md): read when a Rust test suite is the slow part of validation, before buying hardware or moving tests to other machines: find the floor, then levers measured on one case.
 - [GitHub Actions billing](https://docs.github.com/en/billing/concepts/product-billing/github-actions): verify current economics.
 - [Self-hosted runner reference](https://docs.github.com/en/actions/reference/runners/self-hosted-runners): platform constraints.
 - [Secure use reference](https://docs.github.com/en/actions/reference/security/secure-use): runner trust boundaries.
