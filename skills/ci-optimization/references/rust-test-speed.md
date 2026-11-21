@@ -24,7 +24,8 @@ test binaries one after another, so its wall time is the sum of the binaries'
 walls. Measure both before anything else:
 
 - Per-test times: `cargo test ... -- -Z unstable-options --report-time --format json`
-  (nightly libtest), or the JUnit report from `cargo nextest`.
+  (nightly libtest), or nextest's JUnit report once it is enabled in the nextest
+  config ([JUnit support](https://nexte.st/docs/machine-readable/junit/)).
 - Per-binary times: the `suite` events in the same JSON stream.
 
 In the case: one crate's 3 slowest tests were 69% of its test-seconds (31 s, 19 s,
@@ -43,13 +44,14 @@ cost.
 
 | Lever | Measured effect | Cost or caveat |
 |---|---|---|
-| Run binaries concurrently (`cargo nextest run`, default jobs) | main crate 213 s to 127 s, median of 3 (1.7x); CPU time (user plus sys) +6%; 0 of 5,895 tests newly failing | the gain needed full concurrency: at `-j 8` it was no faster than `cargo test`, which already runs many threads per binary; one process per test |
+| Run binaries concurrently (`cargo nextest run`, default jobs) | main crate 213 s to 127 s, median of 3 (1.7x); CPU time (user plus sys) +6%; 0 of 5,895 tests newly failing | the gain needed full concurrency: at `-j 8` it was no faster than `cargo test`, which already runs many threads per binary; one process per test; nextest does not run doctests, so keep a `cargo test --doc` step with the same packages and features |
 | Dependencies optimized in dev builds: `[profile.dev.package."*"] opt-level = 2` | source-parsing tests 1.9x to 2.5x faster (one 8.6x); library test suite -28% | cold build +46%; warm rebuild unchanged (replicated); see the generics caveat below |
 | Split or fix the slowest tests | not measured as a change; the slowest tests set a floor of 60 to 95 s across feature sets and loads | needs the owner of each test |
 | Start the known-slow tests first (nextest test priorities) | not measured: in the case several of the slowest tests started last, and the run ended about 50 s after its slowest test's length | needs a maintained list of slow tests; test groups limit concurrency, priorities set order |
 | Build once, test on many machines (`cargo nextest archive`, then `--partition`) | not measured | each worker needs a compatible runtime environment and the source and assets the tests read; Cargo itself need not be installed |
 
-`opt-level` for dependencies leaves workspace crates at 0, so their own code
+`opt-level` for dependencies leaves workspace crates at the profile's level (0 by
+default, unless another override changes it), so their own code
 stays quick to compile and debug. It speeds up non-generic code inside a
 dependency (parsers, serializers). Generic dependency code instantiated in a
 workspace crate is compiled with that crate's settings, and the test's own
@@ -117,6 +119,8 @@ unoptimized build.
 
 - Compare pass and fail counts per arm; any test that fails only under nextest
   keeps its isolation or is fixed, never skipped.
+- When moving to nextest, keep `cargo test --doc` for the same packages and
+  features: nextest does not run doctests.
 - Keep whole-tree checks before merge unless a rule is proven file-local.
 
 ## Sources
@@ -125,8 +129,34 @@ unoptimized build.
 - [cargo-nextest: test priorities](https://nexte.st/docs/configuration/test-priorities/)
 - [cargo-nextest: archiving and reusing builds](https://nexte.st/docs/ci-features/archiving/)
 - [cargo-nextest: partitioning](https://nexte.st/docs/ci-features/partitioning/)
+- [cargo-nextest: running tests (doctests are not run)](https://nexte.st/docs/running/)
+- [cargo-nextest: JUnit reports](https://nexte.st/docs/machine-readable/junit/)
 - [Cargo profiles: overrides and generics](https://doc.rust-lang.org/cargo/reference/profiles.html#overrides-and-generics)
 - [libtest JSON output and `--report-time` (unstable)](https://doc.rust-lang.org/rustc/tests/index.html)
+
+## Case record
+
+The case numbers above come from hypothesis-first experiments in a private
+repository; this is enough to reproduce their shape on another workspace.
+
+- Machine: one 32-thread x86_64 Linux workstation shared with other build
+  agents (load 15 to 66 during the runs), btrfs on LUKS.
+- Toolchain: `nightly-2026-07-16` (rustc 1.99.0-nightly), cargo-nextest 0.9.152,
+  debug profile with `debug = "line-tables-only"`.
+- Environment: the project's test entry point environment (a test mode flag and
+  a fixed public test key).
+- Profile run: `cargo test -p <crate> [--features <crate>/esp] --lib --bins --tests
+  --offline --no-fail-fast -- -Z unstable-options --report-time --format json`,
+  8 crates, plain and feature builds.
+- Dependency optimization: `--lib` only, arms A (today) and B (`--config
+  'profile.dev.package."*".opt-level=2'`), separate cold target dirs, A B A B,
+  2 runs each; then 5 warm rebuilds per arm, interleaved, first excluded as a
+  warm-up.
+- Concurrency: A `cargo test`, B `cargo nextest run -j 8`, C `cargo nextest run`
+  (default jobs), `--lib --bins --tests --no-fail-fast`, one shared build, A B C
+  x 3, CPU from the shell's `times` builtin.
+- Medians: A 213 s, B 208 s, C 127 s (nextest summaries 116 to 121 s; one C run
+  waited 70 s on a target-dir lock); CPU A 1,758 s, B 1,467 s, C 1,855 s.
 
 ## Use with this skill
 

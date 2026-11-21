@@ -4,8 +4,9 @@
 
 Add a Rust test speed reference to ci-optimization: find the floor (slowest
 test, binaries run in series) before choosing a lever; levers measured on one
-case (nextest 1.7x, optimized dependencies for parse-heavy tests, splitting
-the tail); why source-scanning tests get slow; measurement hygiene.
+case (nextest 1.7x, optimized dependencies for parse-heavy tests) and the ones
+still to measure; doctests stay on `cargo test --doc`; why source-scanning tests
+get slow; measurement hygiene; a case record.
 
 ## v0.2.4 (2026-10-20)
 
